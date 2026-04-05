@@ -1,1 +1,3 @@
-﻿export default function EditProfile() { return <div>Edit Profile</div> }
+﻿export default function EditProfile() {
+  return <div style={{ padding: 40, fontFamily: 'sans-serif' }}>Edit Profile — coming soon</div>
+}
