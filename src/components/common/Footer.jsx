@@ -34,7 +34,7 @@ export default function Footer() {
           ))}
         </div>
         <div style={{ borderTop: '1px solid rgba(255,255,255,.08)', paddingTop: 20, fontSize: 12, textAlign: 'center' }}>
-          © 2025 SolveIt — Built as a Final Year CSE Project
+          © 2025 SolveIt — all rights reserved by SolveIt Ltd. <br />
         </div>
       </div>
     </footer>
