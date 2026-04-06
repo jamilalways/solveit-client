@@ -1,7 +1,7 @@
 <section style="max-width: 900px; margin: auto; font-family: Arial, sans-serif; line-height: 1.6;">
 
   <h2 style="text-align: center; color: #2c3e50;">
-    SolveIt – Problem Solving Marketplace (Clouad ai)
+    SolveIt – Problem Solving Marketplace
   </h2>
 
   <p>
