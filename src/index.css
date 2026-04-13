@@ -13,12 +13,114 @@
   --font-sans: 'Plus Jakarta Sans', sans-serif;
 }
 
+/* ── Theme CSS Variables ───────────────────────────── */
+:root {
+  --bg-primary: #f8f9fc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f5f5f8;
+  --bg-hover: #f5f5ff;
+  --bg-accent: #eef2ff;
+  --bg-card: #ffffff;
+
+  --text-primary: #1a1a2e;
+  --text-secondary: #555555;
+  --text-muted: #888888;
+  --text-faint: #aaaaaa;
+  --text-brand: #4f46e5;
+
+  --border-primary: #f0f0f8;
+  --border-secondary: #e2e2f0;
+  --border-light: #f5f5f8;
+
+  --shadow-card: 0 1px 3px rgba(0,0,0,.06);
+  --shadow-modal: 0 20px 60px rgba(0,0,0,0.15);
+
+  --input-bg: #ffffff;
+  --input-border: #e2e2f0;
+  --input-focus: #6366f1;
+
+  --status-open-bg: #f5f3ff;
+  --status-open-color: #7c3aed;
+  --status-active-bg: #eff6ff;
+  --status-active-color: #2563eb;
+  --status-review-bg: #fffbeb;
+  --status-review-color: #d97706;
+  --status-done-bg: #f0fdf4;
+  --status-done-color: #16a34a;
+
+  --error-bg: #fef2f2;
+  --error-border: #fecaca;
+  --error-text: #dc2626;
+  --success-text: #22c55e;
+
+  --overlay-bg: rgba(0,0,0,0.4);
+
+  --wallet-gradient: linear-gradient(135deg, #4f46e5, #7c3aed);
+  --tag-bg: #f0f0ff;
+  --tag-color: #4f46e5;
+  --msg-me-bg: #4f46e5;
+  --msg-me-color: #ffffff;
+  --msg-other-bg: #f5f5f8;
+  --msg-other-color: #1a1a2e;
+}
+
+[data-theme="dark"] {
+  --bg-primary: #0f0f1a;
+  --bg-secondary: #1a1a2e;
+  --bg-tertiary: #252540;
+  --bg-hover: #2a2a48;
+  --bg-accent: #1e1e3a;
+  --bg-card: #1a1a2e;
+
+  --text-primary: #e8e8f0;
+  --text-secondary: #b0b0c8;
+  --text-muted: #8888a8;
+  --text-faint: #666688;
+  --text-brand: #818cf8;
+
+  --border-primary: #2a2a48;
+  --border-secondary: #3a3a58;
+  --border-light: #252540;
+
+  --shadow-card: 0 1px 3px rgba(0,0,0,.2);
+  --shadow-modal: 0 20px 60px rgba(0,0,0,0.5);
+
+  --input-bg: #252540;
+  --input-border: #3a3a58;
+  --input-focus: #818cf8;
+
+  --status-open-bg: #2d2250;
+  --status-open-color: #a78bfa;
+  --status-active-bg: #1e2a4a;
+  --status-active-color: #60a5fa;
+  --status-review-bg: #3a2e1a;
+  --status-review-color: #fbbf24;
+  --status-done-bg: #1a3a2a;
+  --status-done-color: #4ade80;
+
+  --error-bg: #2a1515;
+  --error-border: #5a2020;
+  --error-text: #f87171;
+  --success-text: #4ade80;
+
+  --overlay-bg: rgba(0,0,0,0.6);
+
+  --wallet-gradient: linear-gradient(135deg, #3730a3, #5b21b6);
+  --tag-bg: #1e1e3a;
+  --tag-color: #818cf8;
+  --msg-me-bg: #4338ca;
+  --msg-me-color: #ffffff;
+  --msg-other-bg: #252540;
+  --msg-other-color: #e8e8f0;
+}
+
 @layer base {
   * { box-sizing: border-box; }
   body {
     font-family: var(--font-sans);
-    background-color: #f8f9fc;
-    color: #1a1a2e;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.25s, color 0.25s;
   }
 }
 
@@ -39,9 +141,9 @@
   }
 
   .btn-outline {
-    border: 1.5px solid #e2e2f0;
-    background: white;
-    color: #333;
+    border: 1.5px solid var(--border-secondary);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
     padding: 10px 20px;
     border-radius: 12px;
     font-weight: 600;
@@ -50,31 +152,31 @@
     transition: all 0.15s;
   }
   .btn-outline:hover {
-    background-color: #f5f5ff;
+    background-color: var(--bg-hover);
   }
 
   .card {
-    background: white;
+    background: var(--bg-card);
     border-radius: 16px;
-    border: 1px solid #f0f0f5;
+    border: 1px solid var(--border-primary);
     padding: 24px;
-    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    box-shadow: var(--shadow-card);
   }
 
   .input-field {
     width: 100%;
-    border: 1.5px solid #e2e2f0;
+    border: 1.5px solid var(--input-border);
     border-radius: 10px;
     padding: 10px 14px;
     font-size: 14px;
     font-family: var(--font-sans);
     outline: none;
     transition: all 0.15s;
-    background: white;
-    color: #1a1a2e;
+    background: var(--input-bg);
+    color: var(--text-primary);
   }
   .input-field:focus {
-    border-color: var(--color-primary-500);
+    border-color: var(--input-focus);
     box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
   }
 
@@ -90,7 +192,7 @@
   .nav-link {
     font-size: 14px;
     font-weight: 500;
-    color: #555;
+    color: var(--text-secondary);
     padding: 6px 14px;
     border-radius: 10px;
     cursor: pointer;
@@ -99,7 +201,7 @@
     display: inline-block;
   }
   .nav-link:hover {
-    background: #f0f0ff;
-    color: var(--color-primary-600);
+    background: var(--bg-hover);
+    color: var(--text-brand);
   }
 }

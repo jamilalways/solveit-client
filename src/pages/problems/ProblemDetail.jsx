@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import Navbar from '../../components/common/Navbar'
 import BidCard from '../../components/common/BidCard'
@@ -36,12 +36,15 @@ export default function ProblemDetail() {
   const [bidForm, setBidForm]   = useState({ proposedPrice: '', deliveryDays: '', message: '' })
   const [bidLoading, setBidLoading] = useState(false)
 
+  const apiBase = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5001'
+
   useEffect(() => {
     const fetch = async () => {
       setLoading(true)
       try {
         const res = await getProblem(id)
-        setProblem(res.data.problem)
+        // Ensure bids are correctly placed on problem object
+        setProblem({ ...res.data.problem, bids: res.data.bids })
       } catch { /* use demo */ }
       finally { setLoading(false) }
     }
@@ -55,6 +58,9 @@ export default function ProblemDetail() {
       await submitBid(id, bidForm)
       setBidModal(false)
       setBidForm({ proposedPrice: '', deliveryDays: '', message: '' })
+      // Re-fetch bids after submission
+      const res = await getProblem(id)
+      setProblem({ ...res.data.problem, bids: res.data.bids })
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to submit bid.')
     } finally { setBidLoading(false) }
@@ -82,37 +88,52 @@ export default function ProblemDetail() {
   const dl = daysLeft(problem.deadline)
 
   return (
-    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#f8f9fc', minHeight: '100vh' }}>
+    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: 'var(--bg-primary)', minHeight: '100vh', paddingBottom: 60 }}>
       <Navbar />
 
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '28px 24px', display: 'grid', gridTemplateColumns: '1fr 300px', gap: 24, alignItems: 'start' }}>
         {/* LEFT */}
         <div>
           {/* Problem card */}
-          <div style={{ background: '#fff', border: '1.5px solid #f0f0f8', borderRadius: 16, padding: 28, marginBottom: 20 }}>
+          <div style={{ background: 'var(--bg-card)', border: '1.5px solid var(--border-primary)', borderRadius: 16, padding: 28, marginBottom: 20 }}>
             <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 14 }}>
-              <span style={{ fontSize: 10, fontWeight: 700, background: '#eff6ff', color: '#2563eb', padding: '3px 10px', borderRadius: 6, textTransform: 'uppercase', letterSpacing: '.04em' }}>
+              <span style={{ fontSize: 10, fontWeight: 700, background: 'var(--bg-accent)', color: 'var(--text-brand)', padding: '3px 10px', borderRadius: 6, textTransform: 'uppercase', letterSpacing: '.04em' }}>
                 {problem.category}
               </span>
-              <span style={{ fontSize: 11, fontWeight: 700, background: problem.status === 'open' ? '#f0fdf4' : '#fef2f2', color: problem.status === 'open' ? '#16a34a' : '#dc2626', padding: '3px 10px', borderRadius: 6 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, background: problem.status === 'open' ? 'var(--status-done-bg)' : 'var(--error-bg)', color: problem.status === 'open' ? 'var(--status-done-color)' : 'var(--error-text)', padding: '3px 10px', borderRadius: 6 }}>
                 {problem.status}
               </span>
             </div>
 
-            <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1a1a2e', lineHeight: 1.3, marginBottom: 16 }}>{problem.title}</h1>
+            <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.3, marginBottom: 16 }}>{problem.title}</h1>
 
-            <div style={{ fontSize: 14, color: '#555', lineHeight: 1.8, whiteSpace: 'pre-line', marginBottom: 20 }}>
+            <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.8, whiteSpace: 'pre-line', marginBottom: 20 }}>
               {problem.description}
             </div>
 
             {problem.files?.length > 0 && (
               <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#999', marginBottom: 8 }}>ATTACHMENTS</div>
-                {problem.files.map((f, i) => (
-                  <a key={i} href={f.url} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#f5f5ff', color: '#4f46e5', padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, textDecoration: 'none', marginRight: 8 }}>
-                    📎 {f.name}
-                  </a>
-                ))}
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 12 }}>ATTACHMENTS</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {problem.files.map((f, i) => {
+                    const isImage = f.url.match(/\.(jpeg|jpg|gif|png|webp)$/i)
+                    const fileUrl = f.url.startsWith('http') ? f.url : `${apiBase}${f.url}`
+                    return (
+                      <div key={i}>
+                        {isImage ? (
+                          <div style={{ border: '1.5px solid var(--border-light)', padding: 8, borderRadius: 12, display: 'inline-block', background: 'var(--bg-tertiary)' }}>
+                            <img src={fileUrl} alt={f.name} style={{ maxWidth: '100%', maxHeight: 300, borderRadius: 8, display: 'block' }} />
+                            <a href={fileUrl} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: 'var(--text-brand)', textDecoration: 'none', display: 'block', marginTop: 8, fontWeight: 600 }}>↗ View Original</a>
+                          </div>
+                        ) : (
+                          <a href={fileUrl} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--bg-accent)', color: 'var(--text-brand)', padding: '8px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+                            📎 {f.name}
+                          </a>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             )}
           </div>
@@ -120,9 +141,9 @@ export default function ProblemDetail() {
           {/* Bids section */}
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-              <h2 style={{ fontSize: 16, fontWeight: 800, color: '#1a1a2e' }}>Proposals ({problem.bids?.length || 0})</h2>
+              <h2 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)' }}>Proposals ({problem.bids?.length || 0})</h2>
               {isSolver && problem.status === 'open' && (
-                <button onClick={() => setBidModal(true)} style={{ background: '#4f46e5', color: '#fff', border: 'none', padding: '9px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                <button onClick={() => setBidModal(true)} style={{ background: 'var(--color-primary-600)', color: '#fff', border: 'none', padding: '9px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
                   Submit a Proposal
                 </button>
               )}
@@ -132,7 +153,7 @@ export default function ProblemDetail() {
                 <BidCard key={bid._id} bid={bid} isClient={isOwner} onAccept={handleAccept} onReject={handleReject} />
               ))}
               {(!problem.bids || problem.bids.length === 0) && (
-                <div style={{ textAlign: 'center', padding: '40px 24px', color: '#aaa', background: '#fff', borderRadius: 14, border: '1.5px solid #f0f0f8' }}>
+                <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-muted)', background: 'var(--bg-card)', borderRadius: 14, border: '1.5px solid var(--border-primary)' }}>
                   <div style={{ fontSize: 32, marginBottom: 8 }}>📭</div>
                   <div style={{ fontSize: 14, fontWeight: 600 }}>No proposals yet</div>
                   <div style={{ fontSize: 12, marginTop: 4 }}>Be the first to submit a proposal</div>
@@ -145,37 +166,45 @@ export default function ProblemDetail() {
         {/* RIGHT SIDEBAR */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {/* Budget & details */}
-          <div style={{ background: '#fff', border: '1.5px solid #f0f0f8', borderRadius: 16, padding: 20 }}>
-            <div style={{ fontSize: 28, fontWeight: 800, color: '#4f46e5', marginBottom: 4 }}>{formatBDT(problem.budget)}</div>
-            <div style={{ fontSize: 12, color: '#888', marginBottom: 18 }}>Fixed price budget</div>
+          <div style={{ background: 'var(--bg-card)', border: '1.5px solid var(--border-primary)', borderRadius: 16, padding: 20 }}>
+            <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--text-brand)', marginBottom: 4 }}>{formatBDT(problem.budget)}</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 18 }}>Fixed price budget</div>
             {[
               { label: 'Deadline',  value: formatDate(problem.deadline) },
               { label: 'Time left', value: dl },
               { label: 'Posted',    value: formatDate(problem.createdAt) },
               { label: 'Proposals', value: `${problem.bids?.length || 0} received` },
             ].map((row) => (
-              <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: '1px solid #f5f5f8' }}>
-                <span style={{ fontSize: 12, color: '#999' }}>{row.label}</span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: '#1a1a2e' }}>{row.value}</span>
+              <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderTop: '1px solid var(--border-light)' }}>
+                <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{row.label}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>{row.value}</span>
               </div>
             ))}
             {isSolver && problem.status === 'open' && (
-              <button onClick={() => setBidModal(true)} style={{ width: '100%', background: '#4f46e5', color: '#fff', border: 'none', padding: '11px', borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', marginTop: 14 }}>
+              <button onClick={() => setBidModal(true)} style={{ width: '100%', background: 'var(--color-primary-600)', color: '#fff', border: 'none', padding: '11px', borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', marginTop: 14 }}>
                 Submit Proposal →
               </button>
             )}
           </div>
 
           {/* Client info */}
-          <div style={{ background: '#fff', border: '1.5px solid #f0f0f8', borderRadius: 16, padding: 20 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 12 }}>Posted by</div>
+          <div style={{ background: 'var(--bg-card)', border: '1.5px solid var(--border-primary)', borderRadius: 16, padding: 20 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 12 }}>Posted by</div>
             <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#4f46e5' }}>
-                {problem.client?.name?.slice(0, 2).toUpperCase()}
-              </div>
+              {problem.client?.avatar ? (
+                <img 
+                  src={problem.client.avatar.startsWith('http') ? problem.client.avatar : `${apiBase}${problem.client.avatar}`} 
+                  alt={problem.client.name} 
+                  style={{ width: 40, height: 40, borderRadius: 10, objectFit: 'cover' }} 
+                />
+              ) : (
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--bg-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: 'var(--text-brand)' }}>
+                  {problem.client?.name?.slice(0, 2).toUpperCase() || 'C'}
+                </div>
+              )}
               <div>
-                <Link to={`/profile/${problem.client?._id}`} style={{ fontSize: 14, fontWeight: 700, color: '#1a1a2e', textDecoration: 'none' }}>{problem.client?.name}</Link>
-                <div style={{ fontSize: 12, color: '#f97316' }}>★ {problem.client?.avgRating?.toFixed(1)}</div>
+                <Link to={`/profile/${problem.client?._id}`} style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', textDecoration: 'none' }}>{problem.client?.name}</Link>
+                <div style={{ fontSize: 12, color: '#f97316' }}>★ {problem.client?.avgRating?.toFixed(1) || '0.0'}</div>
               </div>
             </div>
           </div>

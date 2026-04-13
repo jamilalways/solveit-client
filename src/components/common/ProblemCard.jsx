@@ -11,6 +11,11 @@ const categoryColors = {
   Security:       { bg: '#fef2f2', color: '#dc2626' },
   'AI / ML':      { bg: '#f0f9ff', color: '#0284c7' },
   'Video / Media':{ bg: '#fdf2f8', color: '#db2777' },
+  'Home Services':{ bg: '#ecfdf5', color: '#059669' },
+  'Creative Work':{ bg: '#faf5ff', color: '#9333ea' },
+  Maintenance:    { bg: '#fffbeb', color: '#b45309' },
+  Agriculture:    { bg: '#f0fdf4', color: '#16a34a' },
+  Other:          { bg: '#f3f4f6', color: '#4b5563' },
 }
 
 export default function ProblemCard({ problem }) {

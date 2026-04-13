@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { SocketProvider } from './context/SocketContext'
+import { ThemeProvider } from './context/ThemeContext'
 import Spinner from './components/common/Spinner'
 
 import Home             from './pages/landing/Home'
@@ -12,7 +13,9 @@ import PostProblem      from './pages/problems/PostProblem'
 import ClientDashboard  from './pages/dashboard/ClientDashboard'
 import SolverDashboard  from './pages/dashboard/SolverDashboard'
 import ChatPage         from './pages/chat/ChatPage'
+import MessagesPage     from './pages/chat/MessagesPage'
 import PublicProfile    from './pages/profile/PublicProfile'
+import EditProfile      from './pages/profile/EditProfile'
 import AdminDashboard   from './pages/admin/AdminDashboard'
 
 function PrivateRoute({ children, role }) {
@@ -51,6 +54,15 @@ function AppRoutes() {
       <Route path="/chat/:contractId" element={
         <PrivateRoute><ChatPage /></PrivateRoute>
       } />
+      <Route path="/messages" element={
+        <PrivateRoute><MessagesPage /></PrivateRoute>
+      } />
+      <Route path="/messages/:conversationId" element={
+        <PrivateRoute><MessagesPage /></PrivateRoute>
+      } />
+      <Route path="/profile/edit" element={
+        <PrivateRoute><EditProfile /></PrivateRoute>
+      } />
 
       {/* Admin only */}
       <Route path="/admin" element={
@@ -66,11 +78,13 @@ function AppRoutes() {
 export default function App() {
   return (
     <AuthProvider>
-      <SocketProvider>
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
-      </SocketProvider>
+      <ThemeProvider>
+        <SocketProvider>
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+        </SocketProvider>
+      </ThemeProvider>
     </AuthProvider>
   )
 }

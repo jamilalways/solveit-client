@@ -1,13 +1,17 @@
-﻿import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import Navbar from '../../components/common/Navbar'
 import Footer from '../../components/common/Footer'
 
 const categories = [
   { icon: '💻', label: 'Programming',   count: 312 },
   { icon: '🎨', label: 'Design',         count: 187 },
-  { icon: '✍️',  label: 'Writing',        count: 143 },
+  { icon: '✍️', label: 'Writing',        count: 143 },
   { icon: '📊', label: 'Data & Excel',   count: 98  },
   { icon: '📱', label: 'Mobile App',     count: 75  },
+  { icon: '🏠', label: 'Home Services',  count: 62  },
+  { icon: '✨', label: 'Creative Work',  count: 45  },
+  { icon: '🛠️', label: 'Maintenance',    count: 38  },
+  { icon: '🌾', label: 'Agriculture',    count: 27  },
   { icon: '🔒', label: 'Security',       count: 42  },
   { icon: '🤖', label: 'AI / ML',        count: 61  },
   { icon: '📹', label: 'Video / Media',  count: 33  },

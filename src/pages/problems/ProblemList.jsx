@@ -1,28 +1,20 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import Navbar from '../../components/common/Navbar'
 import Footer from '../../components/common/Footer'
 import ProblemCard from '../../components/common/ProblemCard'
 import Spinner from '../../components/common/Spinner'
 import { getProblems } from '../../api/problems.api'
+import { useAuth } from '../../context/AuthContext'
 import { useDebounce } from '../../hooks/useDebounce'
 
-const CATEGORIES = ['All', 'Programming', 'Design', 'Writing', 'Data & Excel', 'Mobile App', 'Security', 'AI / ML', 'Video / Media']
+const CATEGORIES = ['All', 'Programming', 'Design', 'Writing', 'Data & Excel', 'Mobile App', 'Security', 'AI / ML', 'Video / Media', 'Home Services', 'Creative Work', 'Maintenance', 'Agriculture', 'Other']
 const BUDGETS    = [{ label: 'Any budget', value: '' }, { label: 'Under ৳500', value: '0-500' }, { label: '৳500 – ৳2,000', value: '500-2000' }, { label: '৳2,000 – ৳5,000', value: '2000-5000' }, { label: 'Above ৳5,000', value: '5000+' }]
 const SORTS      = [{ label: 'Newest first', value: 'newest' }, { label: 'Budget: High to Low', value: 'budget_desc' }, { label: 'Deadline: Soonest', value: 'deadline_asc' }, { label: 'Most bids', value: 'bids_desc' }]
 
-// Demo data shown when backend is not connected
-const DEMO_PROBLEMS = [
-  { _id: '1', title: 'Build a REST API for e-commerce app with Node.js', category: 'Programming', description: 'Need endpoints for products, cart, orders and payments. MongoDB preferred. Should include JWT auth and role-based access control.', budget: 3500, deadline: new Date(Date.now() + 3 * 86400000), bidsCount: 7 },
-  { _id: '2', title: 'Design a modern logo and brand kit for a fintech startup', category: 'Design', description: 'Tech startup in fintech space. Need logo, colors, typography guide. Deliverables: AI, PNG and PDF files.', budget: 2000, deadline: new Date(Date.now() + 5 * 86400000), bidsCount: 4 },
-  { _id: '3', title: 'Automate monthly sales report with Excel macros (VBA)', category: 'Data & Excel', description: 'Currently doing it manually. Need VBA macro that pulls from 3 sheets and creates pivot summary automatically.', budget: 800, deadline: new Date(Date.now() + 7 * 86400000), bidsCount: 2 },
-  { _id: '4', title: 'Write 5 SEO-optimised blog articles about digital marketing', category: 'Writing', description: 'Each article 800–1000 words. Topics provided. Need keyword research included. Bangla or English.', budget: 1200, deadline: new Date(Date.now() + 10 * 86400000), bidsCount: 11 },
-  { _id: '5', title: 'Fix login bug and deploy React app to Vercel', category: 'Programming', description: 'App builds locally but fails on Vercel. Authentication state is lost on refresh. Need urgent fix.', budget: 600, deadline: new Date(Date.now() + 1 * 86400000), bidsCount: 9 },
-  { _id: '6', title: 'Create a mobile UI design for food delivery app', category: 'Mobile App', description: 'Figma design needed. 8–10 screens. Modern, clean look. Reference apps: Pathao Food, Shohoz.', budget: 2800, deadline: new Date(Date.now() + 8 * 86400000), bidsCount: 5 },
-]
-
 export default function ProblemList() {
-  const [problems, setProblems]   = useState(DEMO_PROBLEMS)
+  const { user } = useAuth()
+  const [problems, setProblems]   = useState([])
   const [loading, setLoading]     = useState(false)
   const [search, setSearch]       = useState('')
   const [category, setCategory]   = useState('All')
@@ -37,7 +29,7 @@ export default function ProblemList() {
         const res = await getProblems({ search: debouncedSearch, category: category === 'All' ? '' : category, budget, sort })
         setProblems(res.data.problems)
       } catch {
-        // Backend not connected — keep demo data
+        // failed
       } finally {
         setLoading(false)
       }
@@ -46,20 +38,22 @@ export default function ProblemList() {
   }, [debouncedSearch, category, budget, sort])
 
   return (
-    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#f8f9fc', minHeight: '100vh' }}>
+    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: 'var(--bg-primary)', minHeight: '100vh' }}>
       <Navbar />
 
       {/* Header */}
-      <div style={{ background: '#fff', borderBottom: '1px solid #f0f0f5', padding: '28px 32px' }}>
+      <div style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-primary)', padding: '28px 32px' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
             <div>
-              <h1 style={{ fontSize: 24, fontWeight: 800, color: '#1a1a2e', marginBottom: 4 }}>Open Problems</h1>
-              <p style={{ fontSize: 13, color: '#888' }}>{problems.length} problems available</p>
+              <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4 }}>Open Problems</h1>
+              <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>{problems.length} problems available</p>
             </div>
-            <Link to="/post-problem" style={{ background: '#4f46e5', color: '#fff', padding: '10px 22px', borderRadius: 12, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
-              + Post a Problem
-            </Link>
+            {user?.role === 'client' && (
+              <Link to="/post-problem" style={{ background: 'var(--color-primary-600)', color: '#fff', padding: '10px 22px', borderRadius: 12, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
+                + Post a Problem
+              </Link>
+            )}
           </div>
 
           {/* Search bar */}

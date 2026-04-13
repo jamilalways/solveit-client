@@ -13,7 +13,7 @@ export default function Modal({ open, onClose, title, children }) {
     <div
       onClick={onClose}
       style={{
-        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
+        position: 'fixed', inset: 0, background: 'var(--overlay-bg)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         zIndex: 1000, padding: 24, fontFamily: "'Plus Jakarta Sans', sans-serif",
       }}
@@ -21,16 +21,17 @@ export default function Modal({ open, onClose, title, children }) {
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          background: '#fff', borderRadius: 20, padding: 28,
+          background: 'var(--bg-card)', borderRadius: 20, padding: 28,
           width: '100%', maxWidth: 480,
-          boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
+          boxShadow: 'var(--shadow-modal)',
+          border: '1px solid var(--border-primary)',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 800, color: '#1a1a2e', margin: 0 }}>{title}</h2>
+          <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>{title}</h2>
           <button onClick={onClose} style={{
             background: 'none', border: 'none', cursor: 'pointer',
-            fontSize: 22, color: '#aaa', lineHeight: 1,
+            fontSize: 22, color: 'var(--text-faint)', lineHeight: 1,
           }}>×</button>
         </div>
         {children}

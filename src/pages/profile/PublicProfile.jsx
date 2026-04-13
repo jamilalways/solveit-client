@@ -1,94 +1,173 @@
-﻿import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import Navbar from '../../components/common/Navbar'
 import ReviewCard from '../../components/common/ReviewCard'
 import Badge from '../../components/common/Badge'
 import Spinner from '../../components/common/Spinner'
-
-const DEMO_PROFILE = {
-  _id: 's1', name: 'Samin Reza', role: 'solver', badge: 'Pro',
-  avgRating: 4.9, totalJobs: 28, totalEarned: 84000,
-  skills: ['Node.js', 'React', 'MongoDB', 'Python', 'REST APIs', 'Docker'],
-  bio: 'Full-stack developer with 4+ years of experience. Specialised in MERN stack and backend API development. I deliver clean, well-documented code on time.',
-  reviews: [
-    { _id: 'r1', reviewer: { name: 'Arif Khan' }, rating: 5, comment: 'Excellent work! Delivered the API ahead of schedule with full documentation. Highly recommended.', createdAt: new Date(Date.now() - 5 * 86400000) },
-    { _id: 'r2', reviewer: { name: 'Tasnim Ahmed' }, rating: 5, comment: 'Very professional. Fixed all bugs and even improved performance.', createdAt: new Date(Date.now() - 12 * 86400000) },
-    { _id: 'r3', reviewer: { name: 'Karim Uddin' }, rating: 4, comment: 'Good communication and clean code. Would hire again.', createdAt: new Date(Date.now() - 20 * 86400000) },
-  ],
-}
+import { useAuth } from '../../context/AuthContext'
+import { getProfile } from '../../api/users.api'
+import { startConversation } from '../../api/dm.api'
 
 export default function PublicProfile() {
   const { id } = useParams()
-  const [profile, setProfile] = useState(DEMO_PROFILE)
-  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
+  const { user: currentUser } = useAuth()
+  const [profile, setProfile] = useState(null)
+  const [reviews, setReviews] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [msgLoading, setMsgLoading] = useState(false)
+
+  const apiBase = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5001'
+  const avatarUrl = profile?.avatar ? (profile.avatar.startsWith('http') ? profile.avatar : `${apiBase}${profile.avatar}`) : null
 
   useEffect(() => {
-    // Fetch real profile when backend is ready
-    // api.get(`/users/${id}`).then(res => setProfile(res.data.user)).catch(() => {})
+    const fetchProfile = async () => {
+      setLoading(true)
+      try {
+        const res = await getProfile(id)
+        setProfile(res.data.user)
+        setReviews(res.data.reviews || [])
+      } catch {
+        // fallback
+      }
+      setLoading(false)
+    }
+    fetchProfile()
   }, [id])
 
+  const handleSendMessage = async () => {
+    if (!currentUser) return navigate('/login')
+    setMsgLoading(true)
+    try {
+      const res = await startConversation(id)
+      navigate(`/messages/${res.data.conversation._id}`)
+    } catch {
+      // failed
+    }
+    setMsgLoading(false)
+  }
+
   if (loading) return <><Navbar /><Spinner /></>
+  if (!profile) return (
+    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: 'var(--bg-primary)', minHeight: '100vh' }}>
+      <Navbar />
+      <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-muted)' }}>User not found.</div>
+    </div>
+  )
+
+  const isOwnProfile = currentUser?._id === profile._id
 
   return (
-    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#f8f9fc', minHeight: '100vh' }}>
+    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: 'var(--bg-primary)', minHeight: '100vh' }}>
       <Navbar />
 
       <div style={{ maxWidth: 860, margin: '0 auto', padding: '32px 24px', display: 'grid', gridTemplateColumns: '280px 1fr', gap: 24, alignItems: 'start' }}>
         {/* LEFT — profile card */}
         <div>
-          <div style={{ background: '#fff', border: '1.5px solid #f0f0f8', borderRadius: 16, padding: 24, marginBottom: 14 }}>
+          <div style={{ background: 'var(--bg-card)', border: '1.5px solid var(--border-primary)', borderRadius: 16, padding: 24, marginBottom: 14 }}>
             {/* Avatar */}
-            <div style={{ width: 72, height: 72, borderRadius: 18, background: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 800, color: '#4f46e5', margin: '0 auto 12px' }}>
-              {profile.name.slice(0, 2).toUpperCase()}
+            <div style={{
+              width: 72, height: 72, borderRadius: 18, overflow: 'hidden',
+              background: 'var(--bg-accent)', display: 'flex', alignItems: 'center',
+              justifyContent: 'center', fontSize: 22, fontWeight: 800,
+              color: 'var(--text-brand)', margin: '0 auto 12px',
+            }}>
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                profile.name.slice(0, 2).toUpperCase()
+              )}
             </div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 17, fontWeight: 800, color: '#1a1a2e' }}>{profile.name}</div>
-              <div style={{ fontSize: 12, color: '#888', margin: '4px 0 10px' }}>Expert Solver</div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--text-primary)' }}>{profile.name}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 10px', textTransform: 'capitalize' }}>{profile.role}</div>
               <Badge level={profile.badge} />
             </div>
 
-            <div style={{ borderTop: '1px solid #f5f5f8', marginTop: 16, paddingTop: 16 }}>
+            <div style={{ borderTop: '1px solid var(--border-light)', marginTop: 16, paddingTop: 16 }}>
               {[
-                { label: 'Rating',    value: `${profile.avgRating} ★` },
-                { label: 'Jobs done', value: profile.totalJobs          },
-                { label: 'Earned',    value: `৳ ${profile.totalEarned.toLocaleString()}` },
+                { label: 'Rating',    value: `${profile.avgRating || 0} ★` },
+                { label: 'Jobs done', value: profile.totalJobs || 0 },
               ].map((row) => (
-                <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid #f5f5f8', fontSize: 13 }}>
-                  <span style={{ color: '#999' }}>{row.label}</span>
-                  <span style={{ fontWeight: 700, color: '#1a1a2e' }}>{row.value}</span>
+                <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid var(--border-light)', fontSize: 13 }}>
+                  <span style={{ color: 'var(--text-muted)' }}>{row.label}</span>
+                  <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{row.value}</span>
                 </div>
               ))}
             </div>
+
+            {/* Send Message button */}
+            {currentUser && !isOwnProfile && (
+              <button onClick={handleSendMessage} disabled={msgLoading}
+                style={{
+                  width: '100%', marginTop: 16,
+                  background: '#4f46e5', color: '#fff', border: 'none',
+                  padding: '10px 18px', borderRadius: 10, fontSize: 13,
+                  fontWeight: 700, cursor: msgLoading ? 'not-allowed' : 'pointer',
+                  fontFamily: 'inherit', transition: 'all .15s',
+                }}
+                onMouseEnter={(e) => (e.target.style.background = '#4338ca')}
+                onMouseLeave={(e) => (e.target.style.background = '#4f46e5')}
+              >
+                {msgLoading ? 'Opening...' : '💬 Send Message'}
+              </button>
+            )}
+
+            {isOwnProfile && (
+              <button onClick={() => navigate('/profile/edit')}
+                style={{
+                  width: '100%', marginTop: 16,
+                  background: 'var(--bg-tertiary)', color: 'var(--text-secondary)',
+                  border: '1px solid var(--border-secondary)',
+                  padding: '10px 18px', borderRadius: 10, fontSize: 13,
+                  fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                }}>
+                ✏️ Edit Profile
+              </button>
+            )}
           </div>
 
           {/* Skills */}
-          <div style={{ background: '#fff', border: '1.5px solid #f0f0f8', borderRadius: 16, padding: 20 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 12 }}>Skills</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
-              {profile.skills.map((s) => (
-                <span key={s} style={{ background: '#f0f0ff', color: '#4f46e5', borderRadius: 7, padding: '4px 11px', fontSize: 12, fontWeight: 600 }}>{s}</span>
-              ))}
+          {profile.skills?.length > 0 && (
+            <div style={{ background: 'var(--bg-card)', border: '1.5px solid var(--border-primary)', borderRadius: 16, padding: 20 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 12 }}>Skills</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+                {profile.skills.map((s) => (
+                  <span key={s} style={{ background: 'var(--tag-bg)', color: 'var(--tag-color)', borderRadius: 7, padding: '4px 11px', fontSize: 12, fontWeight: 600 }}>{s}</span>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* RIGHT */}
         <div>
           {/* Bio */}
-          <div style={{ background: '#fff', border: '1.5px solid #f0f0f8', borderRadius: 16, padding: 24, marginBottom: 16 }}>
-            <div style={{ fontSize: 15, fontWeight: 800, color: '#1a1a2e', marginBottom: 10 }}>About</div>
-            <p style={{ fontSize: 14, color: '#555', lineHeight: 1.8 }}>{profile.bio}</p>
-          </div>
+          {profile.bio && (
+            <div style={{ background: 'var(--bg-card)', border: '1.5px solid var(--border-primary)', borderRadius: 16, padding: 24, marginBottom: 16 }}>
+              <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 10 }}>About</div>
+              <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.8 }}>{profile.bio}</p>
+            </div>
+          )}
 
           {/* Reviews */}
-          <div>
-            <div style={{ fontSize: 15, fontWeight: 800, color: '#1a1a2e', marginBottom: 14 }}>
-              Reviews ({profile.reviews.length})
+          {reviews.length > 0 && (
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 14 }}>
+                Reviews ({reviews.length})
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {reviews.map((r) => <ReviewCard key={r._id} review={r} />)}
+              </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {profile.reviews.map((r) => <ReviewCard key={r._id} review={r} />)}
+          )}
+
+          {reviews.length === 0 && !profile.bio && (
+            <div style={{ background: 'var(--bg-card)', border: '1.5px solid var(--border-primary)', borderRadius: 16, padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
+              <div style={{ fontSize: 36, marginBottom: 8 }}>📝</div>
+              <div style={{ fontSize: 14, fontWeight: 600 }}>No details yet</div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

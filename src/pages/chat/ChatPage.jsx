@@ -1,35 +1,35 @@
-﻿import { useState, useEffect, useRef } from 'react'
-import { useParams } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import Navbar from '../../components/common/Navbar'
 import { useAuth } from '../../context/AuthContext'
 import { useSocket } from '../../context/SocketContext'
 import { getMessages } from '../../api/chat.api'
+import { getContract, completeContract, submitSolution } from '../../api/contracts.api'
 import { timeAgo } from '../../utils/formatDate'
-
-const DEMO_MESSAGES = [
-  { _id: '1', sender: { _id: 'c1', name: 'Arif Khan' },  text: 'Hi! I just accepted your bid. When can you start?', createdAt: new Date(Date.now() - 3600000) },
-  { _id: '2', sender: { _id: 's1', name: 'Samin Reza' }, text: 'Hello! I can start right away. Can you share access to the codebase?', createdAt: new Date(Date.now() - 3000000) },
-  { _id: '3', sender: { _id: 'c1', name: 'Arif Khan' },  text: 'Sure, I will share the GitHub repo link now.', createdAt: new Date(Date.now() - 2400000) },
-  { _id: '4', sender: { _id: 's1', name: 'Samin Reza' }, text: 'Perfect. I will review it and give you an update by tomorrow morning.', createdAt: new Date(Date.now() - 1800000) },
-]
 
 export default function ChatPage() {
   const { contractId } = useParams()
   const { user }       = useAuth()
   const socket         = useSocket()
+  const navigate       = useNavigate()
   const bottomRef      = useRef(null)
 
-  const [messages, setMessages] = useState(DEMO_MESSAGES)
+  const [contract, setContract] = useState(null)
+  const [messages, setMessages] = useState([])
   const [text, setText]         = useState('')
   const [sending, setSending]   = useState(false)
-  const [other]                 = useState({ name: 'Arif Khan', avatar: 'AK' })
+  const [actionLoading, setActionLoading] = useState(false)
 
   useEffect(() => {
     const fetch = async () => {
       try {
-        const res = await getMessages(contractId)
-        setMessages(res.data.messages)
-      } catch { /* use demo */ }
+        const [msgRes, ctrRes] = await Promise.all([
+          getMessages(contractId),
+          getContract(contractId)
+        ])
+        setMessages(msgRes.data.messages)
+        setContract(ctrRes.data.contract)
+      } catch { /* use empty */ }
     }
     fetch()
   }, [contractId])
@@ -52,9 +52,6 @@ export default function ChatPage() {
     if (!text.trim()) return
     setSending(true)
 
-    const msg = { _id: Date.now(), sender: { _id: user?._id, name: user?.name }, text: text.trim(), createdAt: new Date() }
-    setMessages((prev) => [...prev, msg])
-
     if (socket) {
       socket.emit('send_message', { contractId, message: text.trim() })
     }
@@ -62,44 +59,124 @@ export default function ChatPage() {
     setSending(false)
   }
 
-  const myId = user?._id || 's1'
+  const handleReleasePayment = async () => {
+    if (!window.confirm('Are you sure you want to release the payment? This will complete the contract and cannot be undone.')) return
+    setActionLoading(true)
+    try {
+      const res = await completeContract(contractId)
+      setContract(res.data.contract)
+      alert('Payment released successfully! The contract is now complete.')
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to release payment.')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleSubmitWork = async () => {
+    if (!window.confirm('Are you sure you want to mark this job as done and submit your work to the client?')) return
+    setActionLoading(true)
+    try {
+      const res = await submitSolution(contractId, { note: 'Work completed.' })
+      setContract(res.data.contract)
+      alert('Work submitted! Waiting for the client to release payment.')
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to submit work.')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const myId = user?._id
+  const isClient = user?.role === 'client'
+  
+  // Determine who the other person is based on contract
+  let other = { name: 'Chat Partner', avatar: null }
+  if (contract) {
+    if (isClient) other = { name: contract.solver?.name || 'Solver', avatar: contract.solver?.avatar }
+    else other = { name: contract.client?.name || 'Client', avatar: contract.client?.avatar }
+  }
 
   return (
-    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#f8f9fc', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: 'var(--bg-primary)', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Navbar />
 
       <div style={{ flex: 1, maxWidth: 780, margin: '0 auto', width: '100%', padding: '24px 16px', display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)' }}>
         {/* Chat header */}
-        <div style={{ background: '#fff', border: '1.5px solid #f0f0f8', borderRadius: '16px 16px 0 0', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 40, height: 40, borderRadius: 10, background: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#4f46e5' }}>
-            {other.avatar}
+        <div style={{ background: 'var(--bg-card)', border: '1.5px solid var(--border-primary)', borderRadius: '16px 16px 0 0', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--bg-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: 'var(--text-brand)' }}>
+            {other.name.slice(0, 2).toUpperCase()}
           </div>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1a2e' }}>{other.name}</div>
-            <div style={{ fontSize: 11, color: '#22c55e', fontWeight: 600 }}>● Online</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{other.name}</div>
+            <div style={{ fontSize: 11, color: 'var(--success-text)', fontWeight: 600 }}>● Active</div>
           </div>
-          <div style={{ marginLeft: 'auto', fontSize: 12, color: '#888' }}>Contract #{contractId?.slice(-6)}</div>
+          
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 16 }}>
+            {/* Solver: Submit Work button */}
+            {!isClient && contract && contract.status === 'active' && (
+              <button 
+                onClick={handleSubmitWork} 
+                disabled={actionLoading}
+                title="Mark this contract as completed and submit to client"
+                style={{
+                  background: '#2563eb', color: '#fff', border: 'none',
+                  padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+                  cursor: actionLoading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
+                }}>
+                {actionLoading ? 'Processing...' : '✓ Submit Work'}
+              </button>
+            )}
+
+            {/* Client: Release Payment button */}
+            {isClient && contract && (contract.status === 'active' || contract.status === 'submitted') && (
+              <button 
+                onClick={handleReleasePayment} 
+                disabled={actionLoading}
+                title="Release the held escrow to the solver and complete the job"
+                style={{
+                  background: contract.status === 'submitted' ? 'var(--status-done-color)' : 'var(--text-faint)', 
+                  color: '#fff', border: 'none',
+                  padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+                  cursor: actionLoading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
+                }}>
+                {actionLoading ? 'Processing...' : contract.status === 'submitted' ? '✓ Release Payment' : '✓ Early Release Payment'}
+              </button>
+            )}
+            
+            {contract?.status === 'submitted' && (
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#2563eb', background: '#dbeafe', padding: '4px 10px', borderRadius: 6 }}>
+                Reviewing
+              </span>
+            )}
+            {contract?.status === 'completed' && (
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--status-done-color)', background: 'var(--status-done-bg)', padding: '4px 10px', borderRadius: 6 }}>
+                Completed
+              </span>
+            )}
+            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Contract #{contractId?.slice(-6)}</div>
+          </div>
         </div>
 
         {/* Messages */}
-        <div style={{ flex: 1, background: '#fff', borderLeft: '1.5px solid #f0f0f8', borderRight: '1.5px solid #f0f0f8', padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ flex: 1, background: 'var(--bg-card)', borderLeft: '1.5px solid var(--border-primary)', borderRight: '1.5px solid var(--border-primary)', padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
           {messages.map((msg) => {
             const isMe = msg.sender._id === myId
             return (
               <div key={msg._id} style={{ display: 'flex', justifyContent: isMe ? 'flex-end' : 'flex-start' }}>
                 <div style={{ maxWidth: '68%' }}>
                   {!isMe && (
-                    <div style={{ fontSize: 11, color: '#aaa', marginBottom: 3, paddingLeft: 4 }}>{msg.sender.name}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-faint)', marginBottom: 3, paddingLeft: 4 }}>{msg.sender.name}</div>
                   )}
                   <div style={{
-                    background: isMe ? '#4f46e5' : '#f5f5f8',
-                    color: isMe ? '#fff' : '#1a1a2e',
+                    background: isMe ? 'var(--msg-me-bg)' : 'var(--msg-other-bg)',
+                    color: isMe ? 'var(--msg-me-color)' : 'var(--msg-other-color)',
                     borderRadius: isMe ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
                     padding: '10px 14px', fontSize: 14, lineHeight: 1.5,
                   }}>
                     {msg.text}
                   </div>
-                  <div style={{ fontSize: 10, color: '#ccc', marginTop: 3, textAlign: isMe ? 'right' : 'left', paddingLeft: 4 }}>
+                  <div style={{ fontSize: 10, color: 'var(--text-faint)', marginTop: 3, textAlign: isMe ? 'right' : 'left', paddingLeft: 4 }}>
                     {timeAgo(msg.createdAt)}
                   </div>
                 </div>
@@ -110,17 +187,16 @@ export default function ChatPage() {
         </div>
 
         {/* Input */}
-        <form onSubmit={handleSend} style={{ background: '#fff', border: '1.5px solid #f0f0f8', borderRadius: '0 0 16px 16px', padding: '12px 16px', display: 'flex', gap: 10, alignItems: 'center' }}>
+        <form onSubmit={handleSend} style={{ background: 'var(--bg-card)', border: '1.5px solid var(--border-primary)', borderRadius: '0 0 16px 16px', padding: '12px 16px', display: 'flex', gap: 10, alignItems: 'center' }}>
           <input
             type="text" placeholder="Type a message..." value={text}
             onChange={(e) => setText(e.target.value)}
-            style={{ flex: 1, border: '1.5px solid #e2e2f0', borderRadius: 10, padding: '10px 14px', fontSize: 14, fontFamily: 'inherit', outline: 'none' }}
-            onFocus={(e) => (e.target.style.borderColor = '#6366f1')}
-            onBlur={(e)  => (e.target.style.borderColor = '#e2e2f0')}
+            style={{ flex: 1, border: '1.5px solid var(--input-border)', borderRadius: 10, padding: '10px 14px', fontSize: 14, fontFamily: 'inherit', outline: 'none', background: 'var(--input-bg)', color: 'var(--text-primary)' }}
+            onFocus={(e) => (e.target.style.borderColor = 'var(--input-focus)')}
+            onBlur={(e)  => (e.target.style.borderColor = 'var(--input-border)')}
           />
-          <button type="button" style={{ width: 38, height: 38, border: '1.5px solid #e2e2f0', borderRadius: 10, background: '#fff', cursor: 'pointer', fontSize: 18 }}>📎</button>
           <button type="submit" disabled={!text.trim() || sending} style={{
-            background: text.trim() ? '#4f46e5' : '#e2e2f0', color: text.trim() ? '#fff' : '#aaa',
+            background: text.trim() ? '#4f46e5' : 'var(--bg-tertiary)', color: text.trim() ? '#fff' : 'var(--text-faint)',
             border: 'none', padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700,
             cursor: text.trim() ? 'pointer' : 'not-allowed', fontFamily: 'inherit', whiteSpace: 'nowrap',
           }}>
