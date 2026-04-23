@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+
+# Environment files — local only
+.env
+.env.local
+.env.development.local
+.env.test.local
+# NOTE: .env.production IS committed so Vercel can read it
+# But if it contains secrets, add it here and use Vercel dashboard instead
+
+# Vite cache
+.vite/
+
+# Editor
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
