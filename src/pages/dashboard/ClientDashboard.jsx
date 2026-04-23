@@ -184,7 +184,7 @@ export default function ClientDashboard() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 3 }}>
-            Good morning, {user?.name?.split(' ')[0]} 👋
+            Good morning, {user?.name?.split(' ')[0]} 
           </h1>
           <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Here's your client overview</p>
         </div>
