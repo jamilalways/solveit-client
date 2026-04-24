@@ -5,6 +5,7 @@ import Modal from '../../components/common/Modal'
 import ReviewModal from '../../components/common/ReviewModal'
 import Spinner from '../../components/common/Spinner'
 import { useAuth } from '../../context/AuthContext'
+import useBreakpoint from '../../hooks/useBreakpoint'
 import { formatBDT } from '../../utils/formatCurrency'
 import { getContracts } from '../../api/contracts.api'
 import { getMyBids } from '../../api/bids.api'
@@ -24,6 +25,7 @@ const statusStyle = {
 
 export default function SolverDashboard() {
   const { user } = useAuth()
+  const { isMobile, isTablet } = useBreakpoint()
   
   const [jobs, setJobs] = useState([])
   const [bids, setBids] = useState([])
@@ -124,19 +126,35 @@ export default function SolverDashboard() {
 
   return (
     <DashboardLayout>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: isMobile ? 'column' : 'row',
+        justifyContent: 'space-between', 
+        alignItems: isMobile ? 'flex-start' : 'center', 
+        gap: isMobile ? 16 : 0,
+        marginBottom: 24 
+      }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 3 }}>
+          <h1 style={{ fontSize: isMobile ? 20 : 22, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 3 }}>
             {getGreeting()}, {user?.name?.split(' ')[0]} ⚡
           </h1>
           <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Your solver overview</p>
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button onClick={() => { setSupportModal(true); setSupportMsg({ type: '', text: '' }) }} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)', border: '1.5px solid var(--border-primary)', padding: '10px 22px', borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-            Help / Support
+        <div style={{ display: 'flex', gap: '10px', width: isMobile ? '100%' : 'auto' }}>
+          <button 
+            onClick={() => { setSupportModal(true); setSupportMsg({ type: '', text: '' }) }} 
+            style={{ 
+              flex: isMobile ? 1 : 'none',
+              background: 'var(--bg-card)', color: 'var(--text-primary)', border: '1.5px solid var(--border-primary)', padding: '10px 16px', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' 
+            }}
+          >
+            Support
           </button>
-          <Link to="/problems" style={{ background: '#4f46e5', color: '#fff', padding: '10px 22px', borderRadius: 12, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
-            Browse Problems →
+          <Link to="/problems" style={{ 
+            flex: isMobile ? 1 : 'none',
+            background: '#4f46e5', color: '#fff', padding: '10px 16px', borderRadius: 12, fontSize: 12, fontWeight: 700, textDecoration: 'none', textAlign: 'center' 
+          }}>
+            Browse Problems
           </Link>
         </div>
       </div>
@@ -144,7 +162,12 @@ export default function SolverDashboard() {
       {loading ? <Spinner /> : (
         <>
           {/* Stat cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(4, 1fr)', 
+            gap: 12, 
+            marginBottom: 24 
+          }}>
             {[
               { label: 'Active jobs',    value: jobs.filter(j => j.status === 'active' || j.status === 'submitted').length, color: '#2563eb' },
               { label: 'Completed',      value: jobs.filter(j => j.status === 'completed').length, color: '#16a34a' },
@@ -153,21 +176,30 @@ export default function SolverDashboard() {
             ].map((s) => (
               <div key={s.label} style={{ background: 'var(--bg-card)', border: '1.5px solid var(--border-primary)', borderRadius: 14, padding: '16px 20px' }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.05em' }}>{s.label}</div>
-                <div style={{ fontSize: s.label === 'Total earned' ? 18 : 28, fontWeight: 800, color: s.color, marginTop: 6 }}>{s.value}</div>
+                <div style={{ fontSize: s.label === 'Total earned' ? (isMobile ? 16 : 18) : (isMobile ? 24 : 28), fontWeight: 800, color: s.color, marginTop: 6 }}>{s.value}</div>
               </div>
             ))}
           </div>
 
           {/* Wallet card */}
-          <div style={{ background: 'var(--wallet-gradient)', borderRadius: 16, padding: '20px 24px', marginBottom: 24, color: '#fff' }}>
+          <div style={{ background: 'var(--wallet-gradient)', borderRadius: 16, padding: isMobile ? '16px 20px' : '20px 24px', marginBottom: 24, color: '#fff' }}>
             <div style={{ fontSize: 12, fontWeight: 700, opacity: .7, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 12 }}>My Wallet</div>
-            <div style={{ display: 'flex', gap: 40, alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ 
+              display: 'flex', 
+              flexDirection: isMobile ? 'column' : 'row', 
+              gap: isMobile ? 20 : 40, 
+              alignItems: isMobile ? 'flex-start' : 'center', 
+              justifyContent: 'space-between' 
+            }}>
               <div>
                 <div style={{ fontSize: 11, opacity: .7 }}>Available balance</div>
-                <div style={{ fontSize: 26, fontWeight: 800 }}>{formatBDT(wallet.balance)}</div>
+                <div style={{ fontSize: isMobile ? 22 : 26, fontWeight: 800 }}>{formatBDT(wallet.balance)}</div>
               </div>
               <button onClick={() => { setWithdrawModal(true); setWithdrawAmount(''); setWalletMsg('') }}
-                style={{ background: 'rgba(255,255,255,.2)', color: '#fff', border: '1px solid rgba(255,255,255,.3)', padding: '9px 24px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                style={{ 
+                  width: isMobile ? '100%' : 'auto',
+                  background: 'rgba(255,255,255,.2)', color: '#fff', border: '1px solid rgba(255,255,255,.3)', padding: '9px 24px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' 
+                }}>
                 Withdraw Funds
               </button>
             </div>
@@ -206,7 +238,15 @@ export default function SolverDashboard() {
               ) : jobs.map((job) => {
                 const ss = statusStyle[job.status] || statusStyle.active
                 return (
-                  <div key={job._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 0', borderBottom: '1px solid var(--border-light)' }}>
+                  <div key={job._id} style={{ 
+                    display: 'flex', 
+                    flexDirection: isMobile ? 'column' : 'row',
+                    alignItems: isMobile ? 'flex-start' : 'center', 
+                    justifyContent: 'space-between', 
+                    padding: '16px 0', 
+                    borderBottom: '1px solid var(--border-light)',
+                    gap: isMobile ? 12 : 0
+                  }}>
                     <div>
                       <Link to={`/chat/${job._id}`} style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', textDecoration: 'none' }}
                         onMouseEnter={(e) => (e.target.style.color = '#4f46e5')}
@@ -216,15 +256,15 @@ export default function SolverDashboard() {
                         Client: {job.client?.name} · {formatBDT(job.amount)}
                       </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <span style={{ background: ss.bg, color: ss.color, fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 6 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'space-between' : 'flex-end' }}>
+                      <span style={{ background: ss.bg, color: ss.color, fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 6 }}>
                         {ss.label}
                       </span>
                       {job.status === 'completed' && (
                         <button
                           onClick={() => setReviewModal({ open: true, contractId: job._id })}
                           style={{
-                            background: 'none', border: '1.5px solid var(--border-secondary)', borderRadius: 8, padding: '4px 10px', cursor: 'pointer', fontSize: 12, fontWeight: 700, color: 'var(--text-brand)'
+                            background: 'none', border: '1.5px solid var(--border-secondary)', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 11, fontWeight: 700, color: 'var(--text-brand)'
                           }}
                         >
                           Leave Review
@@ -244,7 +284,15 @@ export default function SolverDashboard() {
               ) : bids.map((bid) => {
                 const ss = statusStyle[bid.status] || statusStyle.pending
                 return (
-                  <div key={bid._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 0', borderBottom: '1px solid var(--border-light)' }}>
+                  <div key={bid._id} style={{ 
+                    display: 'flex', 
+                    flexDirection: isMobile ? 'column' : 'row',
+                    alignItems: isMobile ? 'flex-start' : 'center', 
+                    justifyContent: 'space-between', 
+                    padding: '16px 0', 
+                    borderBottom: '1px solid var(--border-light)',
+                    gap: isMobile ? 12 : 0
+                  }}>
                     <div>
                       <Link to={`/problems/${bid.problem?._id}`} style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', textDecoration: 'none' }}
                         onMouseEnter={(e) => (e.target.style.color = '#4f46e5')}
@@ -254,7 +302,7 @@ export default function SolverDashboard() {
                       </Link>
                       <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 3 }}>Proposed: {formatBDT(bid.proposedPrice)}</div>
                     </div>
-                    <span style={{ background: ss.bg, color: ss.color, fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 6, marginLeft: 16 }}>
+                    <span style={{ background: ss.bg, color: ss.color, fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 6, width: isMobile ? 'fit-content' : 'auto' }}>
                       {ss.label}
                     </span>
                   </div>

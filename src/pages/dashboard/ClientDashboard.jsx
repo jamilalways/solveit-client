@@ -5,6 +5,7 @@ import Modal from '../../components/common/Modal'
 import ReviewModal from '../../components/common/ReviewModal'
 import Spinner from '../../components/common/Spinner'
 import { useAuth } from '../../context/AuthContext'
+import useBreakpoint from '../../hooks/useBreakpoint'
 import { formatBDT } from '../../utils/formatCurrency'
 import { formatDate, daysLeft } from '../../utils/formatDate'
 import { getMyProblems, updateProblem, deleteProblem } from '../../api/problems.api'
@@ -22,6 +23,7 @@ const statusStyle = {
 
 export default function ClientDashboard() {
   const { user } = useAuth()
+  const { isMobile, isTablet } = useBreakpoint()
   const [jobs, setJobs]         = useState([])
   const [contracts, setContracts] = useState([])
   const [bids, setBids]         = useState([])
@@ -189,25 +191,46 @@ export default function ClientDashboard() {
   return (
     <DashboardLayout>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: isMobile ? 'column' : 'row',
+        justifyContent: 'space-between', 
+        alignItems: isMobile ? 'flex-start' : 'center', 
+        gap: isMobile ? 16 : 0,
+        marginBottom: 24 
+      }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 3 }}>
+          <h1 style={{ fontSize: isMobile ? 20 : 22, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 3 }}>
             {getGreeting()}, {user?.name?.split(' ')[0]} 
           </h1>
           <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Here's your client overview</p>
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button onClick={() => { setSupportModal(true); setSupportMsg({ type: '', text: '' }) }} style={{ background: 'var(--bg-card)', color: 'var(--text-primary)', border: '1.5px solid var(--border-primary)', padding: '10px 22px', borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-            Help / Support
+        <div style={{ display: 'flex', gap: '10px', width: isMobile ? '100%' : 'auto' }}>
+          <button 
+            onClick={() => { setSupportModal(true); setSupportMsg({ type: '', text: '' }) }} 
+            style={{ 
+              flex: isMobile ? 1 : 'none',
+              background: 'var(--bg-card)', color: 'var(--text-primary)', border: '1.5px solid var(--border-primary)', padding: '10px 16px', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' 
+            }}
+          >
+            Support
           </button>
-          <Link to="/post-problem" style={{ background: '#4f46e5', color: '#fff', padding: '10px 22px', borderRadius: 12, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
-            + Post a Problem
+          <Link to="/post-problem" style={{ 
+            flex: isMobile ? 1 : 'none',
+            background: '#4f46e5', color: '#fff', padding: '10px 16px', borderRadius: 12, fontSize: 12, fontWeight: 700, textDecoration: 'none', textAlign: 'center' 
+          }}>
+            + Post Problem
           </Link>
         </div>
       </div>
 
       {/* Stat cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(4, 1fr)', 
+        gap: 12, 
+        marginBottom: 24 
+      }}>
         {[
           { label: 'Total jobs',   value: stats.total,     color: '#4f46e5', bg: 'var(--status-open-bg)'  },
           { label: 'Active',       value: stats.active,    color: '#2563eb', bg: 'var(--status-active-bg)' },
@@ -222,16 +245,16 @@ export default function ClientDashboard() {
       </div>
 
       {/* Wallet card */}
-      <div style={{ background: 'var(--wallet-gradient)', borderRadius: 16, padding: '20px 24px', marginBottom: 24, color: '#fff' }}>
+      <div style={{ background: 'var(--wallet-gradient)', borderRadius: 16, padding: isMobile ? '16px 20px' : '20px 24px', marginBottom: 24, color: '#fff' }}>
         <div style={{ fontSize: 12, fontWeight: 700, opacity: .7, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 12 }}>My Wallet</div>
-        <div style={{ display: 'flex', gap: 40 }}>
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 20 : 40 }}>
           <div>
             <div style={{ fontSize: 11, opacity: .7 }}>Available balance</div>
-            <div style={{ fontSize: 26, fontWeight: 800 }}>{formatBDT(wallet.balance)}</div>
+            <div style={{ fontSize: isMobile ? 22 : 26, fontWeight: 800 }}>{formatBDT(wallet.balance)}</div>
           </div>
           <div>
             <div style={{ fontSize: 11, opacity: .7 }}>In escrow</div>
-            <div style={{ fontSize: 26, fontWeight: 800 }}>{formatBDT(wallet.escrow)}</div>
+            <div style={{ fontSize: isMobile ? 22 : 26, fontWeight: 800 }}>{formatBDT(wallet.escrow)}</div>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
@@ -280,7 +303,15 @@ export default function ClientDashboard() {
           ) : contracts.map((contract) => {
             const ss = statusStyle[contract.status] || statusStyle.active
             return (
-              <div key={contract._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 0', borderBottom: '1px solid var(--border-light)' }}>
+              <div key={contract._id} style={{ 
+                display: 'flex', 
+                flexDirection: isMobile ? 'column' : 'row',
+                alignItems: isMobile ? 'flex-start' : 'center', 
+                justifyContent: 'space-between', 
+                padding: '16px 0', 
+                borderBottom: '1px solid var(--border-light)',
+                gap: isMobile ? 12 : 0
+              }}>
                 <div>
                   <Link to={`/chat/${contract._id}`} style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-brand)', textDecoration: 'none' }}
                     onMouseEnter={(e) => (e.target.style.color = 'var(--text-primary)')}
@@ -290,15 +321,15 @@ export default function ClientDashboard() {
                     Solver: {contract.solver?.name} · {formatBDT(contract.amount)}
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <span style={{ background: ss.bg, color: ss.color, fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'space-between' : 'flex-end' }}>
+                  <span style={{ background: ss.bg, color: ss.color, fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 6 }}>
                     {ss.label || contract.status}
                   </span>
                   {contract.status === 'completed' && (
                     <button
                       onClick={() => setReviewModal({ open: true, contractId: contract._id })}
                       style={{
-                        background: 'none', border: '1.5px solid var(--border-secondary)', borderRadius: 8, padding: '4px 10px', cursor: 'pointer', fontSize: 12, fontWeight: 700, color: 'var(--text-brand)'
+                        background: 'none', border: '1.5px solid var(--border-secondary)', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 11, fontWeight: 700, color: 'var(--text-brand)'
                       }}
                     >
                       Leave Review
@@ -317,7 +348,15 @@ export default function ClientDashboard() {
             <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>No pending proposals on your problems.</div>
           ) : bids.map((bid) => {
             return (
-              <div key={bid._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 0', borderBottom: '1px solid var(--border-light)' }}>
+              <div key={bid._id} style={{ 
+                display: 'flex', 
+                flexDirection: isMobile ? 'column' : 'row',
+                alignItems: isMobile ? 'flex-start' : 'center', 
+                justifyContent: 'space-between', 
+                padding: '16px 0', 
+                borderBottom: '1px solid var(--border-light)',
+                gap: isMobile ? 12 : 0
+              }}>
                 <div>
                   <Link to={`/problems/${bid.problem?._id}`} style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-brand)', textDecoration: 'none' }}
                     onMouseEnter={(e) => (e.target.style.color = 'var(--text-primary)')}
@@ -329,7 +368,11 @@ export default function ClientDashboard() {
                     By {bid.solver?.name} · Proposed: {formatBDT(bid.proposedPrice)}
                   </div>
                 </div>
-                <Link to={`/problems/${bid.problem?._id}`} style={{ background: 'var(--bg-accent)', color: 'var(--text-brand)', fontSize: 11, fontWeight: 700, padding: '5px 12px', borderRadius: 8, textDecoration: 'none' }}>
+                <Link to={`/problems/${bid.problem?._id}`} style={{ 
+                  width: isMobile ? '100%' : 'auto',
+                  textAlign: 'center',
+                  background: 'var(--bg-accent)', color: 'var(--text-brand)', fontSize: 11, fontWeight: 700, padding: '7px 12px', borderRadius: 8, textDecoration: 'none' 
+                }}>
                   Review Bid →
                 </Link>
               </div>
@@ -351,7 +394,15 @@ export default function ClientDashboard() {
               {jobs.map((job) => {
                 const ss = statusStyle[job.status] || statusStyle.open
                 return (
-                  <div key={job._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 0', borderBottom: '1px solid var(--border-light)' }}>
+                  <div key={job._id} style={{ 
+                    display: 'flex', 
+                    flexDirection: isMobile ? 'column' : 'row',
+                    alignItems: isMobile ? 'flex-start' : 'center', 
+                    justifyContent: 'space-between', 
+                    padding: '16px 0', 
+                    borderBottom: '1px solid var(--border-light)',
+                    gap: isMobile ? 12 : 0
+                  }}>
                     <div style={{ flex: 1 }}>
                       <Link to={`/problems/${job._id}`} style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', textDecoration: 'none' }}
                         onMouseEnter={(e) => (e.target.style.color = '#4f46e5')}
@@ -362,20 +413,22 @@ export default function ClientDashboard() {
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ background: ss.bg, color: ss.color, fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 6, whiteSpace: 'nowrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'space-between' : 'flex-end' }}>
+                      <span style={{ background: ss.bg, color: ss.color, fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 6, whiteSpace: 'nowrap' }}>
                         {ss.label}
                       </span>
-                      {job.status === 'open' && (
-                        <button onClick={() => openEdit(job)} title="Edit"
-                          style={{ background: 'none', border: '1.5px solid var(--border-secondary)', borderRadius: 8, padding: '4px 10px', cursor: 'pointer', fontSize: 13, color: 'var(--text-brand)' }}>
-                          ✏️
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        {job.status === 'open' && (
+                          <button onClick={() => openEdit(job)} title="Edit"
+                            style={{ background: 'none', border: '1.5px solid var(--border-secondary)', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 13, color: 'var(--text-brand)' }}>
+                            ✏️
+                          </button>
+                        )}
+                        <button onClick={() => setDeleteId(job._id)} title="Delete"
+                          style={{ background: 'none', border: '1.5px solid var(--border-secondary)', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 13, color: 'var(--error-text)' }}>
+                          🗑️
                         </button>
-                      )}
-                      <button onClick={() => setDeleteId(job._id)} title="Delete"
-                        style={{ background: 'none', border: '1.5px solid var(--border-secondary)', borderRadius: 8, padding: '4px 10px', cursor: 'pointer', fontSize: 13, color: 'var(--error-text)' }}>
-                        🗑️
-                      </button>
+                      </div>
                     </div>
                   </div>
                 )
