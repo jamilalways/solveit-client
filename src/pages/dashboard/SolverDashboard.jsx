@@ -108,6 +108,14 @@ export default function SolverDashboard() {
     }
   }
 
+  const getGreeting = () => {
+    const hour = new Date().getHours()
+    if (hour < 12) return 'Good morning'
+    if (hour < 17) return 'Good afternoon'
+    if (hour < 21) return 'Good evening'
+    return 'Good night'
+  }
+
   const inputStyle = {
     width: '100%', border: '1.5px solid var(--input-border)', borderRadius: 10,
     padding: '10px 13px', fontSize: 14, fontFamily: 'inherit', outline: 'none',
@@ -119,7 +127,7 @@ export default function SolverDashboard() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 3 }}>
-            Welcome back, {user?.name?.split(' ')[0]} ⚡
+            {getGreeting()}, {user?.name?.split(' ')[0]} ⚡
           </h1>
           <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Your solver overview</p>
         </div>

@@ -1,88 +1,115 @@
 import { Link } from 'react-router-dom'
 import Navbar from '../../components/common/Navbar'
 import Footer from '../../components/common/Footer'
+import useBreakpoint from '../../hooks/useBreakpoint'
 
 const categories = [
-  { icon: '💻', label: 'Programming',   count: 312 },
-  { icon: '🎨', label: 'Design',         count: 187 },
-  { icon: '✍️', label: 'Writing',        count: 143 },
-  { icon: '📊', label: 'Data & Excel',   count: 98  },
-  { icon: '📱', label: 'Mobile App',     count: 75  },
-  { icon: '🏠', label: 'Home Services',  count: 62  },
-  { icon: '✨', label: 'Creative Work',  count: 45  },
-  { icon: '🛠️', label: 'Maintenance',    count: 38  },
-  { icon: '🌾', label: 'Agriculture',    count: 27  },
-  { icon: '🔒', label: 'Security',       count: 42  },
-  { icon: '🤖', label: 'AI / ML',        count: 61  },
-  { icon: '📹', label: 'Video / Media',  count: 33  },
+  { icon: '💻', label: 'Programming', count: 312 },
+  { icon: '🎨', label: 'Design', count: 187 },
+  { icon: '✍️', label: 'Writing', count: 143 },
+  { icon: '📊', label: 'Data & Excel', count: 98 },
+  { icon: '📱', label: 'Mobile App', count: 75 },
+  { icon: '🏠', label: 'Home Services', count: 62 },
+  { icon: '✨', label: 'Creative Work', count: 45 },
+  { icon: '🛠️', label: 'Maintenance', count: 38 },
+  { icon: '🌾', label: 'Agriculture', count: 27 },
+  { icon: '🔒', label: 'Security', count: 42 },
+  { icon: '🤖', label: 'AI / ML', count: 61 },
+  { icon: '📹', label: 'Video / Media', count: 33 },
 ]
 
 const steps = [
-  { step: '01', title: 'Post your problem',    desc: 'Describe your problem, set a budget and deadline in under 2 minutes.' },
-  { step: '02', title: 'Receive proposals',    desc: 'Expert solvers review your problem and send competitive proposals.' },
+  { step: '01', title: 'Post your problem', desc: 'Describe your problem, set a budget and deadline in under 2 minutes.' },
+  { step: '02', title: 'Receive proposals', desc: 'Expert solvers review your problem and send competitive proposals.' },
   { step: '03', title: 'Pick the best solver', desc: 'Review profiles, ratings and proposals. Choose who you trust.' },
-  { step: '04', title: 'Get it done & pay',    desc: 'Work is escrow-protected. Pay only when you are satisfied.' },
+  { step: '04', title: 'Get it done & pay', desc: 'Work is escrow-protected. Pay only when you are satisfied.' },
 ]
 
 const testimonials = [
-  { name: 'Arif Khan',    role: 'Client', avatar: 'AK', text: 'Got my React bug fixed in 2 hours. The solver was professional and fast. Will use again!', rating: 5 },
+  { name: 'Arif Khan', role: 'Client', avatar: 'AK', text: 'Got my React bug fixed in 2 hours. The solver was professional and fast. Will use again!', rating: 5 },
   { name: 'Tasnim Ahmed', role: 'Solver', avatar: 'TA', text: 'SolveIt helped me earn ৳40,000 last month solving programming problems part-time.', rating: 5 },
-  { name: 'Rafiq Mia',    role: 'Client', avatar: 'RM', text: 'Finally a platform where I can find reliable freelancers with escrow payment protection.', rating: 4 },
+  { name: 'Rafiq Mia', role: 'Client', avatar: 'RM', text: 'Finally a platform where I can find reliable freelancers with escrow payment protection.', rating: 4 },
 ]
 
 export default function Home() {
+  const { isMobile, isTablet, isSmall } = useBreakpoint()
+
   return (
-    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#f8f9fc', color: '#1a1a2e' }}>
+    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#f8f9fc', color: '#1a1a2e', overflowX: 'hidden' }}>
       <Navbar />
 
       {/* HERO */}
-      <section style={{ textAlign: 'center', padding: '80px 24px 60px', maxWidth: 760, margin: '0 auto' }}>
+      <section style={{ textAlign: 'center', padding: isSmall ? '60px 20px 40px' : '80px 24px 60px', maxWidth: 760, margin: '0 auto' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#eef2ff', color: '#4338ca', border: '1px solid #c7d2fe', borderRadius: 100, padding: '5px 16px', fontSize: 12, fontWeight: 600, marginBottom: 22 }}>
-          🚀 Bangladesh's Problem Solving Marketplace
+          Bangladesh's Problem Solving Marketplace
         </div>
-        <h1 style={{ fontSize: 52, fontWeight: 800, lineHeight: 1.12, color: '#1a1a2e', letterSpacing: '-1px', marginBottom: 18 }}>
+        <h1 style={{
+          fontSize: isMobile ? 36 : isTablet ? 44 : 52,
+          fontWeight: 800,
+          lineHeight: 1.12,
+          color: '#1a1a2e',
+          letterSpacing: '-1px',
+          marginBottom: 18
+        }}>
           Post a Problem.<br />
           <span style={{ color: '#4f46e5' }}>Get it Solved.</span>
         </h1>
-        <p style={{ fontSize: 17, color: '#666', maxWidth: 480, margin: '0 auto 32px', lineHeight: 1.7 }}>
+        <p style={{ fontSize: isMobile ? 15 : 17, color: '#666', maxWidth: 480, margin: '0 auto 32px', lineHeight: 1.7 }}>
           Connect with expert solvers for programming, design, writing, and more. Fast, secure, and escrow-protected.
         </p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Link to="/problems" style={{ background: '#4f46e5', color: '#fff', padding: '13px 30px', borderRadius: 12, fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
-            Browse Problems →
+          <Link to="/problems" style={{ background: '#4f46e5', color: '#fff', padding: '13px 30px', borderRadius: 12, fontSize: 15, fontWeight: 700, textDecoration: 'none', flex: isMobile ? 1 : 'none' }}>
+            Browse Problems
           </Link>
-          <Link to="/register" style={{ background: '#fff', color: '#333', border: '1.5px solid #e2e2ee', padding: '13px 30px', borderRadius: 12, fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
+          <Link to="/register" style={{ background: '#fff', color: '#333', border: '1.5px solid #e2e2ee', padding: '13px 30px', borderRadius: 12, fontSize: 15, fontWeight: 700, textDecoration: 'none', flex: isMobile ? 1 : 'none' }}>
             Become a Solver
           </Link>
         </div>
 
         {/* Stats bar */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 48, background: '#fff', borderRadius: 16, border: '1px solid #f0f0f5', overflow: 'hidden', flexWrap: 'wrap' }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
+          marginTop: 48,
+          background: '#fff',
+          borderRadius: 16,
+          border: '1px solid #f0f0f5',
+          overflow: 'hidden'
+        }}>
           {[
             { n: '1,240+', l: 'Problems Solved' },
-            { n: '840+',   l: 'Active Solvers'  },
-            { n: '৳ 2.4M', l: 'Paid Out'        },
-            { n: '4.8 ★',  l: 'Avg Rating'      },
+            { n: '840+', l: 'Active Solvers' },
+            { n: '৳ 2.4M', l: 'Paid Out' },
+            { n: '4.8 ★', l: 'Avg Rating' },
           ].map((s, i) => (
-            <div key={i} style={{ textAlign: 'center', padding: '20px 36px', borderRight: i < 3 ? '1px solid #f0f0f5' : 'none' }}>
-              <div style={{ fontSize: 26, fontWeight: 800, color: '#4f46e5' }}>{s.n}</div>
-              <div style={{ fontSize: 12, color: '#888', fontWeight: 500, marginTop: 3 }}>{s.l}</div>
+            <div key={i} style={{
+              textAlign: 'center',
+              padding: isMobile ? '16px' : '20px 24px',
+              borderRight: (!isMobile && i < 3) || (isMobile && i % 2 === 0) ? '1px solid #f0f0f5' : 'none',
+              borderBottom: (isMobile && i < 2) ? '1px solid #f0f0f5' : 'none'
+            }}>
+              <div style={{ fontSize: isMobile ? 20 : 26, fontWeight: 800, color: '#4f46e5' }}>{s.n}</div>
+              <div style={{ fontSize: 11, color: '#888', fontWeight: 500, marginTop: 3 }}>{s.l}</div>
             </div>
           ))}
         </div>
       </section>
 
       {/* CATEGORIES */}
-      <section style={{ maxWidth: 960, margin: '0 auto', padding: '0 24px 60px' }}>
-        <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 24, textAlign: 'center' }}>Browse by Category</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+      <section style={{ maxWidth: 960, margin: '0 auto', padding: '0 20px 60px' }}>
+        <h2 style={{ fontSize: isSmall ? 24 : 28, fontWeight: 800, marginBottom: 24, textAlign: 'center' }}>Browse by Category</h2>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : isTablet ? 'repeat(3, 1fr)' : 'repeat(4, 1fr)',
+          gap: 12
+        }}>
           {categories.map((c, i) => (
             <Link to={`/problems?category=${c.label}`} key={i} style={{ textDecoration: 'none' }}>
               <div style={{ background: '#fff', border: '1.5px solid #f0f0f8', borderRadius: 14, padding: '20px 12px', textAlign: 'center', transition: 'all .2s' }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = '#6366f1'; e.currentTarget.style.background = '#fafafe' }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = '#f0f0f8'; e.currentTarget.style.background = '#fff' }}
               >
-                <div style={{ fontSize: 28, marginBottom: 8 }}>{c.icon}</div>
+                <div style={{ fontSize: 24, marginBottom: 8 }}>{c.icon}</div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a2e' }}>{c.label}</div>
                 <div style={{ fontSize: 11, color: '#999', marginTop: 3 }}>{c.count} open</div>
               </div>
@@ -92,11 +119,15 @@ export default function Home() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section id="how" style={{ background: '#fff', padding: '64px 24px' }}>
+      <section id="how" style={{ background: '#fff', padding: '64px 20px' }}>
         <div style={{ maxWidth: 960, margin: '0 auto' }}>
-          <h2 style={{ fontSize: 28, fontWeight: 800, textAlign: 'center', marginBottom: 8 }}>How SolveIt Works</h2>
+          <h2 style={{ fontSize: isSmall ? 24 : 28, fontWeight: 800, textAlign: 'center', marginBottom: 8 }}>How SolveIt Works</h2>
           <p style={{ textAlign: 'center', color: '#888', fontSize: 15, marginBottom: 44 }}>Four simple steps to get your problem solved</p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20 }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
+            gap: 20
+          }}>
             {steps.map((s, i) => (
               <div key={i} style={{ textAlign: 'center', padding: '28px 16px', background: '#f8f9fc', borderRadius: 16, position: 'relative' }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: '#4f46e5', letterSpacing: '.12em', marginBottom: 12 }}>{s.step}</div>
@@ -109,9 +140,13 @@ export default function Home() {
       </section>
 
       {/* TESTIMONIALS */}
-      <section style={{ maxWidth: 960, margin: '0 auto', padding: '64px 24px' }}>
-        <h2 style={{ fontSize: 28, fontWeight: 800, textAlign: 'center', marginBottom: 36 }}>What People Say</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+      <section style={{ maxWidth: 960, margin: '0 auto', padding: '64px 20px' }}>
+        <h2 style={{ fontSize: isSmall ? 24 : 28, fontWeight: 800, textAlign: 'center', marginBottom: 36 }}>What People Say</h2>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
+          gap: 16
+        }}>
           {testimonials.map((t, i) => (
             <div key={i} style={{ background: '#fff', border: '1.5px solid #f0f0f8', borderRadius: 16, padding: 22 }}>
               <div style={{ fontSize: 16, color: '#f97316', marginBottom: 10 }}>{'★'.repeat(t.rating)}</div>
@@ -129,12 +164,12 @@ export default function Home() {
       </section>
 
       {/* CTA */}
-      <section style={{ background: '#4f46e5', padding: '64px 24px', textAlign: 'center' }}>
-        <h2 style={{ fontSize: 32, fontWeight: 800, color: '#fff', marginBottom: 12 }}>Ready to get started?</h2>
+      <section style={{ background: '#4f46e5', padding: '64px 20px', textAlign: 'center' }}>
+        <h2 style={{ fontSize: isMobile ? 26 : 32, fontWeight: 800, color: '#fff', marginBottom: 12 }}>Ready to get started?</h2>
         <p style={{ fontSize: 15, color: '#c7d2fe', marginBottom: 30 }}>Join thousands of clients and solvers on SolveIt today.</p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Link to="/register" style={{ background: '#fff', color: '#4f46e5', padding: '13px 30px', borderRadius: 12, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>Post a Problem</Link>
-          <Link to="/register" style={{ background: 'transparent', color: '#fff', border: '1.5px solid rgba(255,255,255,.4)', padding: '13px 30px', borderRadius: 12, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>Become a Solver</Link>
+          <Link to="/register" style={{ background: '#fff', color: '#4f46e5', padding: '13px 30px', borderRadius: 12, fontSize: 14, fontWeight: 700, textDecoration: 'none', flex: isMobile ? 1 : 'none' }}>Post a Problem</Link>
+          <Link to="/register" style={{ background: 'transparent', color: '#fff', border: '1.5px solid rgba(255,255,255,.4)', padding: '13px 30px', borderRadius: 12, fontSize: 14, fontWeight: 700, textDecoration: 'none', flex: isMobile ? 1 : 'none' }}>Become a Solver</Link>
         </div>
       </section>
 

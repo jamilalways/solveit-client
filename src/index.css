@@ -1,5 +1,6 @@
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
 
 @theme {
   --color-primary-50:  #eef2ff;
@@ -203,5 +204,25 @@
   .nav-link:hover {
     background: var(--bg-hover);
     color: var(--text-brand);
+  }
+
+  /* ── Responsive Utilities ────────────────────────── */
+  .mobile-only { display: none; }
+  @media (max-width: 1023px) {
+    .mobile-only { display: block; }
+    .desktop-only { display: none; }
+  }
+
+  .scroll-x {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }
