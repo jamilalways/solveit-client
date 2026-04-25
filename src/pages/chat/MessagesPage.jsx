@@ -112,7 +112,7 @@ export default function MessagesPage() {
         {/* Left — Conversation list */}
         <div style={{ width: 300, borderRight: '1.5px solid var(--border-primary)', display: 'flex', flexDirection: 'column', background: 'var(--bg-card)', overflow: 'hidden' }}>
           <div style={{ padding: '18px 20px', borderBottom: '1px solid var(--border-primary)' }}>
-            <h2 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>💬 Messages</h2>
+            <h2 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}> Messages</h2>
           </div>
 
           <div style={{ flex: 1, overflowY: 'auto' }}>

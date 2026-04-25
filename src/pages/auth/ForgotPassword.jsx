@@ -33,7 +33,7 @@ export default function ForgotPassword() {
 
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
         <div style={{ background: '#fff', border: '1.5px solid #f0f0f8', borderRadius: 20, padding: '36px 32px', width: '100%', maxWidth: 420 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#1a1a2e', marginBottom: 6 }}>Forgot Password? 🔑</h1>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: '#1a1a2e', marginBottom: 6 }}>Forgot Password? </h1>
           <p style={{ fontSize: 13, color: '#888', marginBottom: 26 }}>Enter your email and we'll send you a link to reset your password.</p>
 
           {message && (

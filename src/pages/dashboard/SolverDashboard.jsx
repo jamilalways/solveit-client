@@ -208,7 +208,7 @@ export default function SolverDashboard() {
           {/* Recent Activity / Transactions */}
           {wallet.transactions && wallet.transactions.length > 0 && (
             <div style={{ background: 'var(--bg-card)', border: '1.5px solid var(--border-primary)', borderRadius: 16, padding: '20px 24px', marginBottom: 24 }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 16 }}>💰 Account Activity</div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 16 }}> Account Activity</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {wallet.transactions.slice(0, 4).map((tx) => (
                   <div key={tx._id} style={{ display: 'flex', alignItems: 'flex-start', padding: '12px 16px', background: 'var(--bg-primary)', borderRadius: 12, border: '1px solid var(--border-light)' }}>
@@ -314,7 +314,7 @@ export default function SolverDashboard() {
       )}
 
       {/* ─── Withdraw Modal ─────────────────────── */}
-      <Modal open={withdrawModal} onClose={() => setWithdrawModal(false)} title="💸 Withdraw Funds">
+      <Modal open={withdrawModal} onClose={() => setWithdrawModal(false)} title=" Withdraw Funds">
         <div style={{ marginBottom: 16 }}>
           <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>
             Amount (৳)

@@ -439,7 +439,7 @@ export default function ClientDashboard() {
       </div>
 
       {/* ─── Deposit / Withdraw Modal ─────────────────────── */}
-      <Modal open={!!walletModal} onClose={() => setWalletModal(null)} title={walletModal === 'deposit' ? '💰 Deposit Funds' : '💸 Withdraw Funds'}>
+      <Modal open={!!walletModal} onClose={() => setWalletModal(null)} title={walletModal === 'deposit' ? ' Deposit Funds' : ' Withdraw Funds'}>
         <div style={{ marginBottom: 16 }}>
           <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>
             Amount (৳)
