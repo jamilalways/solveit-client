@@ -48,8 +48,8 @@ export default function Register() {
           {/* Role selector */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
             {[
-              { value: 'client', icon: '💼', label: 'I need problems solved', sub: 'Post as Client' },
-              { value: 'solver', icon: '⚡', label: 'I want to solve problems', sub: 'Join as Solver' },
+              { value: 'client', label: 'I need problems solved', sub: 'Post as Client' },
+              { value: 'solver', label: 'I want to solve problems', sub: 'Join as Solver' },
             ].map((r) => (
               <div key={r.value} onClick={() => setRole(r.value)} style={{
                 border: `2px solid ${role === r.value ? '#4f46e5' : '#f0f0f8'}`,
