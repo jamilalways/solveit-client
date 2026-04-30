@@ -26,37 +26,42 @@ export default function ProblemCard({ problem }) {
   return (
     <Link to={`/problems/${problem._id}`} style={{ textDecoration: 'none' }}>
       <div style={{
-        background: '#fff', border: '1.5px solid #f0f0f8', borderRadius: 16,
+        background: 'var(--bg-card)', border: '1.5px solid var(--border-primary)', borderRadius: 16,
         padding: 18, transition: 'all .2s', cursor: 'pointer',
         fontFamily: "'Plus Jakarta Sans', sans-serif",
       }}
-        onMouseEnter={e => { e.currentTarget.style.borderColor = '#c7d2fe'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(79,70,229,.08)' }}
-        onMouseLeave={e => { e.currentTarget.style.borderColor = '#f0f0f8'; e.currentTarget.style.boxShadow = 'none' }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--text-brand)'; e.currentTarget.style.boxShadow = 'var(--shadow-card)' }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-primary)'; e.currentTarget.style.boxShadow = 'none' }}
       >
         {/* Category badge */}
-        <span style={{ ...cat, fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 6, letterSpacing: '.04em', textTransform: 'uppercase' }}>
+        <span style={{ 
+          background: cat.bg, 
+          color: cat.color, 
+          fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 6, letterSpacing: '.04em', textTransform: 'uppercase',
+          filter: document.documentElement.getAttribute('data-theme') === 'dark' ? 'brightness(0.9) contrast(1.2)' : 'none'
+        }}>
           {problem.category}
         </span>
 
         {/* Title */}
-        <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1a1a2e', margin: '10px 0 5px', lineHeight: 1.4 }}>
+        <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', margin: '10px 0 5px', lineHeight: 1.4 }}>
           {problem.title}
         </h3>
 
         {/* Description */}
-        <p style={{ fontSize: 12, color: '#777', lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+        <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
           {problem.description}
         </p>
 
         {/* Footer */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, paddingTop: 12, borderTop: '1px solid #f5f5f8' }}>
-          <span style={{ fontSize: 15, fontWeight: 800, color: '#4f46e5' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--border-light)' }}>
+          <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-brand)' }}>
             {problem.budgetType === 'range' && problem.budgetMax
               ? `${formatBDT(problem.budget)} - ${formatBDT(problem.budgetMax).replace('৳ ', '')}`
               : formatBDT(problem.budget)}
           </span>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <span style={{ background: '#f0f0ff', color: '#4f46e5', borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 600 }}>
+            <span style={{ background: 'var(--bg-accent)', color: 'var(--text-brand)', borderRadius: 6, padding: '2px 8px', fontSize: 11, fontWeight: 600 }}>
               {problem.bidsCount || 0} bids
             </span>
             <span style={{ fontSize: 11, fontWeight: 600, color: isUrgent ? '#ef4444' : '#f97316' }}>
