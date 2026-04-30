@@ -46,6 +46,8 @@ export default function SolverDashboard() {
   const [supportForm, setSupportForm] = useState({ subject: '', message: '' })
   const [supportLoading, setSupportLoading] = useState(false)
   const [supportMsg, setSupportMsg] = useState({ type: '', text: '' })
+  const [myTickets, setMyTickets] = useState([])
+  const [supportTab, setSupportTab] = useState('new') // 'new' | 'list'
 
   useEffect(() => {
     const fetchData = async () => {
@@ -70,6 +72,13 @@ export default function SolverDashboard() {
 
   const totalEarned = jobs.filter((j) => j.status === 'completed').reduce((s, j) => s + j.amount, 0)
 
+  const fetchMyTickets = async () => {
+    try {
+      const res = await supportApi.getMyTickets()
+      setMyTickets(res.tickets || [])
+    } catch { /* ignore */ }
+  }
+
   const handleWithdraw = async () => {
     const amount = Number(withdrawAmount)
     if (!amount || amount <= 0) return setWalletMsg('Enter a valid amount.')
@@ -79,7 +88,14 @@ export default function SolverDashboard() {
     setWalletMsg('')
     try {
       const res = await withdrawFunds({ amount })
-      setWallet((prev) => ({ ...prev, balance: res.data.wallet.balance }))
+      
+      // Refresh wallet & transactions
+      const walletRes = await getWallet()
+      setWallet({ 
+        balance: walletRes.data.wallet?.balance || 0, 
+        transactions: walletRes.data.transactions || [] 
+      })
+
       setWalletMsg(res.data.message || 'Success!')
       setWithdrawAmount('')
       setTimeout(() => { setWithdrawModal(false); setWalletMsg('') }, 1500)
@@ -136,7 +152,7 @@ export default function SolverDashboard() {
       }}>
         <div>
           <h1 style={{ fontSize: isMobile ? 20 : 22, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 3 }}>
-            {getGreeting()}, {user?.name?.split(' ')[0]} ⚡
+            {getGreeting()}, {user?.name?.split(' ')[0]} <i className="fi fi-rr-bolt" style={{ fontSize: 20, color: '#f97316', verticalAlign: 'middle' }}></i>
           </h1>
           <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Your solver overview</p>
         </div>
@@ -208,7 +224,7 @@ export default function SolverDashboard() {
           {/* Recent Activity / Transactions */}
           {wallet.transactions && wallet.transactions.length > 0 && (
             <div style={{ background: 'var(--bg-card)', border: '1.5px solid var(--border-primary)', borderRadius: 16, padding: '20px 24px', marginBottom: 24 }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 16 }}> Account Activity</div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 16 }}><i className="fi fi-rr-coins"></i> Account Activity</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {wallet.transactions.slice(0, 4).map((tx) => (
                   <div key={tx._id} style={{ display: 'flex', alignItems: 'flex-start', padding: '12px 16px', background: 'var(--bg-primary)', borderRadius: 12, border: '1px solid var(--border-light)' }}>
@@ -220,8 +236,8 @@ export default function SolverDashboard() {
                         {new Date(tx.createdAt).toLocaleDateString()} at {new Date(tx.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </div>
                     </div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: tx.type === 'payment_received' || tx.type === 'deposit' ? 'var(--status-done-color)' : 'var(--error-text)', marginLeft: 16, whiteSpace: 'nowrap' }}>
-                      {tx.type === 'payment_received' || tx.type === 'deposit' ? '+' : '-'} {formatBDT(tx.amount)}
+                    <div style={{ fontSize: 14, fontWeight: 800, color: tx.type === 'payment_received' || tx.type === 'deposit' || tx.type === 'escrow_release' ? 'var(--status-done-color)' : 'var(--error-text)', marginLeft: 16, whiteSpace: 'nowrap' }}>
+                      {tx.type === 'payment_received' || tx.type === 'deposit' || tx.type === 'escrow_release' ? '+' : '-'} {formatBDT(tx.amount)}
                     </div>
                   </div>
                 ))}
@@ -357,31 +373,77 @@ export default function SolverDashboard() {
       />
 
       {/* ─── Support Modal ──────────────────────── */}
-      <Modal open={supportModal} onClose={() => setSupportModal(false)} title="🎧 Get Support">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div>
-            <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>Subject</label>
-            <input value={supportForm.subject} onChange={(e) => setSupportForm({ ...supportForm, subject: e.target.value })}
-              style={inputStyle} placeholder="E.g., Payment issue" />
-          </div>
-          <div>
-            <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>Message</label>
-            <textarea rows={4} value={supportForm.message}
-              onChange={(e) => setSupportForm({ ...supportForm, message: e.target.value })}
-              style={{ ...inputStyle, resize: 'vertical' }} placeholder="Please describe your problem..." />
-          </div>
-          {supportMsg.text && (
-            <div style={{ background: supportMsg.type === 'success' ? 'var(--status-done-bg)' : 'var(--error-bg)', color: supportMsg.type === 'success' ? 'var(--status-done-color)' : 'var(--error-text)', borderRadius: 8, padding: '8px 12px', fontSize: 13 }}>{supportMsg.text}</div>
-          )}
-          <button onClick={handleSupportSubmit} disabled={supportLoading}
-            style={{
-              width: '100%', background: supportLoading ? '#a5b4fc' : '#4f46e5', color: '#fff',
-              border: 'none', padding: 12, borderRadius: 10, fontSize: 14, fontWeight: 700,
-              cursor: supportLoading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
-            }}>
-            {supportLoading ? 'Submitting...' : 'Submit Support Ticket →'}
-          </button>
+      <Modal open={supportModal} onClose={() => setSupportModal(false)} title="🎧 Help & Support">
+        <div style={{ display: 'flex', gap: 12, marginBottom: 20, borderBottom: '1px solid var(--border-light)', paddingBottom: 10 }}>
+          <button onClick={() => setSupportTab('new')} style={{
+            background: 'none', border: 'none', padding: '8px 16px', fontSize: 13, fontWeight: 700,
+            cursor: 'pointer', fontFamily: 'inherit',
+            color: supportTab === 'new' ? 'var(--text-brand)' : 'var(--text-muted)',
+            borderBottom: supportTab === 'new' ? '2px solid var(--text-brand)' : '2px solid transparent',
+          }}>Submit Ticket</button>
+          <button onClick={() => { setSupportTab('list'); fetchMyTickets() }} style={{
+            background: 'none', border: 'none', padding: '8px 16px', fontSize: 13, fontWeight: 700,
+            cursor: 'pointer', fontFamily: 'inherit',
+            color: supportTab === 'list' ? 'var(--text-brand)' : 'var(--text-muted)',
+            borderBottom: supportTab === 'list' ? '2px solid var(--text-brand)' : '2px solid transparent',
+          }}>My Tickets ({myTickets.length})</button>
         </div>
+
+        {supportTab === 'new' ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>Subject</label>
+              <input value={supportForm.subject} onChange={(e) => setSupportForm({ ...supportForm, subject: e.target.value })}
+                style={inputStyle} placeholder="E.g., Issue with a Solver" />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>Message</label>
+              <textarea rows={4} value={supportForm.message}
+                onChange={(e) => setSupportForm({ ...supportForm, message: e.target.value })}
+                style={{ ...inputStyle, resize: 'vertical' }} placeholder="Please describe your problem..." />
+            </div>
+            {supportMsg.text && (
+              <div style={{ background: supportMsg.type === 'success' ? 'var(--status-done-bg)' : 'var(--error-bg)', color: supportMsg.type === 'success' ? 'var(--status-done-color)' : 'var(--error-text)', borderRadius: 8, padding: '8px 12px', fontSize: 13 }}>{supportMsg.text}</div>
+            )}
+            <button onClick={handleSupportSubmit} disabled={supportLoading}
+              style={{
+                width: '100%', background: supportLoading ? '#a5b4fc' : '#4f46e5', color: '#fff',
+                border: 'none', padding: 12, borderRadius: 10, fontSize: 14, fontWeight: 700,
+                cursor: supportLoading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
+              }}>
+              {supportLoading ? 'Submitting...' : 'Submit Support Ticket →'}
+            </button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 400, overflowY: 'auto', paddingRight: 4 }}>
+            {myTickets.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)', fontSize: 13 }}>You haven't submitted any tickets yet.</div>
+            ) : myTickets.map(t => (
+              <div key={t._id} style={{ background: 'var(--bg-primary)', border: '1.5px solid var(--border-primary)', borderRadius: 12, padding: 14 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)' }}>{t.subject}</span>
+                  {t.status === 'resolved' ? (
+                    <span style={{ background: '#f0fdf4', color: '#16a34a', fontSize: 10, fontWeight: 800, padding: '3px 10px', borderRadius: 6, border: '1px solid #bbf7d0' }}>
+                      ✅ FIXED THIS
+                    </span>
+                  ) : (
+                    <span style={{ background: 'var(--bg-accent)', color: 'var(--text-brand)', fontSize: 10, fontWeight: 800, padding: '3px 10px', borderRadius: 6 }}>
+                      OPEN
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6 }}>{t.message}</div>
+                {t.adminReply && (
+                  <div style={{ marginTop: 12, padding: '10px 12px', background: 'var(--bg-card)', borderRadius: 8, borderLeft: '3px solid #16a34a' }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: '#16a34a', textTransform: 'uppercase', marginBottom: 4 }}>Admin Response</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-primary)' }}>{t.adminReply}</div>
+                  </div>
+                )}
+                <div style={{ fontSize: 10, color: 'var(--text-faint)', marginTop: 10 }}>Submitted on {new Date(t.createdAt).toLocaleDateString()}</div>
+              </div>
+            ))}
+          </div>
+        )}
       </Modal>
 
     </DashboardLayout>

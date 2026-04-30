@@ -225,4 +225,12 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* Sidebar Icon Floating Effect */
+  .sidebar-icon {
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .sidebar-link:hover .sidebar-icon {
+    transform: translateY(-2px);
+  }
 }

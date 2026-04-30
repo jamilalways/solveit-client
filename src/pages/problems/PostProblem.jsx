@@ -41,7 +41,7 @@ export default function PostProblem() {
       // Set budget values for range type
       if (payload.budgetType === 'range') {
         payload.budget = payload.budgetMin
-        payload.budgetMax = payload.budgetMax
+        payload.budgetMax = form.budgetMax
       }
       delete payload.budgetMin
       if (payload.budgetType !== 'range') delete payload.budgetMax
@@ -182,7 +182,7 @@ export default function PostProblem() {
             <div style={{ border: '1.5px dashed var(--border-secondary)', borderRadius: 10, padding: '20px', textAlign: 'center', cursor: 'pointer', background: 'var(--bg-tertiary)' }}
               onClick={() => document.getElementById('file-input').click()}
             >
-              <div style={{ fontSize: 24, marginBottom: 6 }}>📎</div>
+              <div style={{ fontSize: 24, marginBottom: 6 }}><i className="fi fi-rr-paperclip"></i></div>
               <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>Click to attach files</div>
               <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 3 }}>Images, PDFs, code files — max 10MB each</div>
               <input id="file-input" type="file" multiple hidden onChange={(e) => setFiles(Array.from(e.target.files))} />
@@ -204,7 +204,11 @@ export default function PostProblem() {
             border: 'none', padding: 14, borderRadius: 12, fontSize: 15, fontWeight: 700,
             cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
           }}>
-            {loading ? 'Posting...' : 'Post Problem →'}
+            {loading ? 'Posting...' : (
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                Post Problem <i className="fi fi-rr-paper-plane" style={{ fontSize: 13 }}></i>
+              </span>
+            )}
           </button>
         </form>
       </div>

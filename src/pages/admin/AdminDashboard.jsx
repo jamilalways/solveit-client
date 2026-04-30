@@ -224,11 +224,11 @@ export default function AdminDashboard() {
   const resolvedDisputes = disputes.filter(d => d.status === 'resolved').length
 
   const tabs = [
-    { key: 'overview',  label: '📊 Overview'  },
-    { key: 'users',     label: '👥 Users'      },
-    { key: 'problems',  label: '📋 Problems'   },
-    { key: 'disputes',  label: `⚖️ Disputes ${openDisputes > 0 ? `(${openDisputes})` : ''}` },
-    { key: 'support',   label: `🎧 Support ${supportTickets.filter(t=>t.status==='open').length > 0 ? `(${supportTickets.filter(t=>t.status==='open').length})` : ''}` },
+    { key: 'overview',  label: <><i className="fi fi-rr-chart-histogram"></i> Overview</>  },
+    { key: 'users',     label: <><i className="fi fi-rr-users"></i> Users</>      },
+    { key: 'problems',  label: <><i className="fi fi-rr-list-check"></i> Problems</>   },
+    { key: 'disputes',  label: <><i className="fi fi-rr-scale-balanced"></i> Disputes {openDisputes > 0 ? `(${openDisputes})` : ''}</> },
+    { key: 'support',   label: <><i className="fi fi-rr-headset"></i> Support {supportTickets.filter(t=>t.status==='open').length > 0 ? `(${supportTickets.filter(t=>t.status==='open').length})` : ''}</> },
   ]
 
   return (
@@ -285,12 +285,12 @@ export default function AdminDashboard() {
       {tab === 'overview' && !loading && (
         <div>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
-            <StatCard label="Total Users"       value={stats.totalUsers}                   icon="👥" color="#4f46e5" dark={dark} isMobile={isMobile} />
-            <StatCard label="Total Problems"    value={stats.totalProblems}                icon="📋" color="#2563eb" dark={dark} isMobile={isMobile} />
-            <StatCard label="Completed Jobs"    value={stats.totalContracts}               icon="✅" color="#16a34a" dark={dark} isMobile={isMobile} />
-            <StatCard label="Total Revenue"     value={formatBDT(stats.totalRevenue || 0)} icon="💰" color="#d97706" dark={dark} isMobile={isMobile} />
-            <StatCard label="Open Disputes"     value={openDisputes}                       icon="⚖️" color="#dc2626" dark={dark} isMobile={isMobile} />
-            <StatCard label="Resolved Disputes" value={resolvedDisputes}                   icon="🏆" color="#0891b2" dark={dark} isMobile={isMobile} />
+            <StatCard label="Total Users"       value={stats.totalUsers}                   icon={<i className="fi fi-rr-users"></i>} color="#4f46e5" dark={dark} isMobile={isMobile} />
+            <StatCard label="Total Problems"    value={stats.totalProblems}                icon={<i className="fi fi-rr-list-check"></i>} color="#2563eb" dark={dark} isMobile={isMobile} />
+            <StatCard label="Completed Jobs"    value={stats.totalContracts}               icon={<i className="fi fi-rr-check"></i>} color="#16a34a" dark={dark} isMobile={isMobile} />
+            <StatCard label="Total Revenue"     value={formatBDT(stats.totalRevenue || 0)} icon={<i className="fi fi-rr-coins"></i>} color="#d97706" dark={dark} isMobile={isMobile} />
+            <StatCard label="Open Disputes"     value={openDisputes}                       icon={<i className="fi fi-rr-scale-balanced"></i>} color="#dc2626" dark={dark} isMobile={isMobile} />
+            <StatCard label="Resolved Disputes" value={resolvedDisputes}                   icon={<i className="fi fi-rr-trophy"></i>} color="#0891b2" dark={dark} isMobile={isMobile} />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: isSmall ? '1fr' : '1fr 1fr', gap: 16, marginBottom: 16 }}>
@@ -370,11 +370,14 @@ export default function AdminDashboard() {
       {tab === 'users' && !loading && (
         <div>
           <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', flex: 1, minWidth: isMobile ? '100%' : 200 }}>
+            <i className="fi fi-rr-search" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: sub }}></i>
             <input
-              type="text" placeholder="🔍 Search..."
+              type="text" placeholder="Search..."
               value={searchUser} onChange={e => setSearchUser(e.target.value)}
-              style={{ flex: 1, minWidth: isMobile ? '100%' : 200, border: `1.5px solid ${border}`, borderRadius: 10, padding: '9px 14px', fontSize: 13, fontFamily: 'inherit', outline: 'none', background: inputBg, color: text }}
+              style={{ width: '100%', border: `1.5px solid ${border}`, borderRadius: 10, padding: '9px 14px 9px 36px', fontSize: 13, fontFamily: 'inherit', outline: 'none', background: inputBg, color: text, boxSizing: 'border-box' }}
             />
+          </div>
             <div className="hide-scrollbar" style={{ display: 'flex', gap: 6, overflowX: 'auto', width: isMobile ? '100%' : 'auto' }}>
               {['all', 'client', 'solver'].map(r => (
                 <button key={r} onClick={() => setRoleFilter(r)} style={{

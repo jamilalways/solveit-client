@@ -4,7 +4,8 @@ import DashboardLayout from '../../components/layout/DashboardLayout'
 import Spinner from '../../components/common/Spinner'
 import { useAuth } from '../../context/AuthContext'
 import { useSocket } from '../../context/SocketContext'
-import { getConversations, getDirectMessages, startConversation } from '../../api/dm.api'
+import { getConversations, getDirectMessages, startConversation, sendDirectMessage } from '../../api/dm.api'
+import { getContractByProblem, submitSolution, completeContract } from '../../api/contracts.api'
 import { timeAgo } from '../../utils/formatDate'
 import getImageUrl from '../../utils/getImageUrl'
 
@@ -22,6 +23,15 @@ export default function MessagesPage() {
   const [loading, setLoading]             = useState(true)
   const [msgLoading, setMsgLoading]       = useState(false)
   const [sending, setSending]             = useState(false)
+  const [activeContract, setActiveContract] = useState(null)
+  const [actionLoading, setActionLoading] = useState(false)
+
+  // Sync activeConv with URL param
+  useEffect(() => {
+    if (conversationId && conversationId !== activeConv) {
+      setActiveConv(conversationId)
+    }
+  }, [conversationId, activeConv])
 
   // Fetch conversation list
   useEffect(() => {
@@ -43,11 +53,22 @@ export default function MessagesPage() {
       try {
         const res = await getDirectMessages(activeConv)
         setMessages(res.data.messages || [])
+
+        // Also fetch contract if there's a problem linked
+        const conv = conversations.find(c => c._id === activeConv)
+        if (conv?.problem) {
+          try {
+            const cRes = await getContractByProblem(conv.problem._id || conv.problem)
+            setActiveContract(cRes.data.contract)
+          } catch { setActiveContract(null) }
+        } else {
+          setActiveContract(null)
+        }
       } catch { /* empty */ }
       setMsgLoading(false)
     }
     fetchMsgs()
-  }, [activeConv])
+  }, [activeConv, conversations])
 
   // Socket join/leave
   useEffect(() => {
@@ -76,17 +97,83 @@ export default function MessagesPage() {
   const handleSend = async (e) => {
     e.preventDefault()
     if (!text.trim() || !activeConv) return
+    const msgText = text.trim()
+    setText('')
     setSending(true)
     
-    if (socket) {
-      socket.emit('send_dm', { conversationId: activeConv, text: text.trim() })
+    try {
+      await sendDirectMessage(activeConv, { text: msgText })
+    } catch (err) {
+      console.error('Send message failed:', err)
+      alert('Failed to send message. Please check your connection.')
+      setText(msgText) // restore text if failed
+    } finally {
+      setSending(false)
     }
-    setText('')
-    setSending(false)
+  }
+
+  const handleReleasePayment = async () => {
+    if (!activeContract) return
+    if (!window.confirm('Are you sure you want to release the payment? This will complete the contract.')) return
+    setActionLoading(true)
+    try {
+      const res = await completeContract(activeContract._id)
+      setActiveContract(res.data.contract)
+      alert('Payment released successfully!')
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to release payment.')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleSubmitWork = async () => {
+    if (!activeContract) return
+    if (!window.confirm('Are you sure you want to submit your work to the client?')) return
+    setActionLoading(true)
+    try {
+      const res = await submitSolution(activeContract._id, { note: 'Work completed via messages.' })
+      setActiveContract(res.data.contract)
+      alert('Work submitted successfully!')
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to submit work.')
+    } finally {
+      setActionLoading(false)
+    }
   }
 
   const getOtherUser = (conv) => {
     return conv.participants?.find((p) => p._id !== user?._id) || { name: 'Unknown' }
+  }
+
+  const StatusStepper = ({ status }) => {
+    if (!status) return null
+    const steps = [
+      { id: 'active', label: 'Working' },
+      { id: 'submitted', label: 'Reviewing' },
+      { id: 'completed', label: 'Done' }
+    ]
+    const getStepIndex = (s) => steps.findIndex(step => step.id === s)
+    const currentIndex = getStepIndex(status)
+
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 24 }}>
+        {steps.map((step, i) => (
+          <div key={step.id} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div style={{
+              fontSize: 9, fontWeight: 800, padding: '3px 8px', borderRadius: 6, textTransform: 'uppercase',
+              background: i <= currentIndex ? 'var(--bg-accent)' : 'var(--bg-tertiary)',
+              color: i <= currentIndex ? 'var(--text-brand)' : 'var(--text-faint)',
+              border: i === currentIndex ? '1.5px solid var(--text-brand)' : '1.5px solid transparent',
+              transition: 'all 0.2s',
+            }}>
+              {step.label}
+            </div>
+            {i < steps.length - 1 && <i className="fi fi-rr-angle-small-right" style={{ fontSize: 12, color: 'var(--text-faint)' }}></i>}
+          </div>
+        ))}
+      </div>
+    )
   }
 
   const renderAvatar = (u, size = 40) => {
@@ -147,6 +234,11 @@ export default function MessagesPage() {
                           </span>
                         )}
                       </div>
+                      {conv.problem && (
+                        <div style={{ fontSize: 10, color: 'var(--text-brand)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 2 }}>
+                          Problem: {conv.problem.title}
+                        </div>
+                      )}
                       <div style={{ fontSize: 11, color: 'var(--text-faint)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {conv.lastMessage || 'Start chatting...'}
                       </div>
@@ -174,10 +266,55 @@ export default function MessagesPage() {
                 const other = conv ? getOtherUser(conv) : { name: 'Chat' }
                 return (
                   <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-primary)', display: 'flex', alignItems: 'center', gap: 12 }}>
-                    {renderAvatar(other, 36)}
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{other.name}</div>
-                      <div style={{ fontSize: 11, color: 'var(--success-text)', fontWeight: 600 }}>● Online</div>
+                    <div 
+                      onClick={() => navigate(`/profile/${other._id}`)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}
+                    >
+                      {renderAvatar(other, 36)}
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{other.name}</div>
+                        {conv?.problem && (
+                          <div style={{ fontSize: 11, color: 'var(--text-brand)', fontWeight: 600 }}>
+                            Topic: {conv.problem.title}
+                          </div>
+                        )}
+                        <div style={{ fontSize: 11, color: 'var(--success-text)', fontWeight: 600 }}>● Online</div>
+                      </div>
+                    </div>
+
+                    {/* Status Stepper */}
+                    {activeContract && (
+                      <div style={{ marginLeft: 20 }}>
+                        <StatusStepper status={activeContract.status} />
+                      </div>
+                    )}
+
+                    <div style={{ marginLeft: 'auto', display: 'flex', gap: 10 }}>
+                      {/* Solver Action */}
+                      {user?.role === 'solver' && activeContract && activeContract.status === 'active' && (
+                        <button onClick={handleSubmitWork} disabled={actionLoading} style={{
+                          background: '#2563eb', color: '#fff', border: 'none', padding: '6px 12px',
+                          borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: actionLoading ? 'not-allowed' : 'pointer',
+                        }}>
+                          {actionLoading ? '...' : 'Submit Work'}
+                        </button>
+                      )}
+
+                      {/* Client Action */}
+                      {user?.role === 'client' && activeContract && activeContract.status === 'submitted' && (
+                        <button onClick={handleReleasePayment} disabled={actionLoading} style={{
+                          background: 'var(--status-done-color)', color: '#fff', border: 'none', padding: '6px 12px',
+                          borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: actionLoading ? 'not-allowed' : 'pointer',
+                        }}>
+                          {actionLoading ? '...' : 'Release Payment'}
+                        </button>
+                      )}
+                      
+                      {activeContract?.status === 'completed' && (
+                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--status-done-color)', background: 'var(--status-done-bg)', padding: '4px 10px', borderRadius: 6 }}>
+                          Contract Completed
+                        </span>
+                      )}
                     </div>
                   </div>
                 )

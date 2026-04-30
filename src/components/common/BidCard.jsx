@@ -17,12 +17,16 @@ export default function BidCard({ bid, onAccept, onReject, isClient }) {
   const sc = statusColors[bid.status] || statusColors.pending
 
   const handleMessage = async () => {
+    const solverId = bid.solver?._id || bid.solver
+    if (!solverId) return alert('Cannot find solver ID')
+
     setMsgLoading(true)
     try {
-      const res = await startConversation(bid.solver._id)
+      const res = await startConversation(solverId, { problemId: bid.problem?._id || bid.problem })
       navigate(`/messages/${res.data.conversation._id}`)
-    } catch {
-      // ignore
+    } catch (err) {
+      console.error('Failed to start conversation:', err)
+      alert(err.response?.data?.message || 'Failed to open messages. Please try again.')
     } finally {
       setMsgLoading(false)
     }
@@ -54,7 +58,7 @@ export default function BidCard({ bid, onAccept, onReject, isClient }) {
           <div>
             <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{bid.solver?.name}</div>
             <div style={{ fontSize: 11, color: '#f97316', marginTop: 2 }}>
-              {'★'.repeat(Math.round(bid.solver?.avgRating || 0))}
+              <span style={{ color: '#f97316' }}><i className="fi fi-sr-star" style={{ fontSize: 12 }}></i></span>
               <span style={{ color: 'var(--text-muted)', marginLeft: 4 }}>({bid.solver?.avgRating?.toFixed(1) || 'New'})</span>
             </div>
           </div>
@@ -100,7 +104,11 @@ export default function BidCard({ bid, onAccept, onReject, isClient }) {
             padding: '8px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700,
             cursor: msgLoading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
           }}>
-            {msgLoading ? 'Opening...' : '💬 Message Solver'}
+            {msgLoading ? 'Opening...' : (
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                <i className="fi fi-rr-comment" style={{ fontSize: 13 }}></i> Message Solver
+              </span>
+            )}
           </button>
           <button onClick={() => onReject(bid._id)} style={{
             background: 'var(--bg-card)', color: 'var(--error-text)', border: 'none', marginLeft: 'auto',

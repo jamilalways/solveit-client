@@ -14,5 +14,10 @@ export const supportApi = {
   updateTicketStatus: async (id, data) => {
     const res = await axiosInstance.put(`/support/${id}/status`, data);
     return res.data;
+  },
+  
+  getMyTickets: async () => {
+    const res = await axiosInstance.get('/support/my-tickets');
+    return res.data;
   }
 };

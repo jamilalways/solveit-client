@@ -6,26 +6,26 @@ import getImageUrl from '../../utils/getImageUrl'
 import useBreakpoint from '../../hooks/useBreakpoint'
 
 const clientLinks = [
-  { to: '/dashboard/client',   icon: '📊', label: 'Overview'     },
-  { to: '/problems',           icon: '🔍', label: 'Browse'        },
-  { to: '/post-problem',       icon: '✏️',  label: 'Post Problem'  },
-  { to: '/messages',           icon: '💬', label: 'Messages'      },
-  { to: '/profile/edit',       icon: '👤', label: 'Edit Profile'  },
+  { to: '/dashboard/client',   icon: 'fi fi-rr-apps',        label: 'Overview'     },
+  { to: '/problems',           icon: 'fi fi-rr-search',      label: 'Browse'       },
+  { to: '/post-problem',       icon: 'fi fi-rr-edit',        label: 'Post Problem' },
+  { to: '/messages',           icon: 'fi fi-rr-comment',     label: 'Messages'     },
+  { to: '/profile/edit',       icon: 'fi fi-rr-user',        label: 'Edit Profile' },
 ]
 
 const solverLinks = [
-  { to: '/dashboard/solver',      icon: '📊', label: 'Overview'   },
-  { to: '/problems',              icon: '🔍', label: 'Browse'      },
-  { to: '/messages',              icon: '💬', label: 'Messages'    },
-  { to: '/profile/edit',          icon: '👤', label: 'Edit Profile'},
+  { to: '/dashboard/solver',      icon: 'fi fi-rr-apps',        label: 'Overview'   },
+  { to: '/problems',              icon: 'fi fi-rr-search',      label: 'Browse'      },
+  { to: '/messages',              icon: 'fi fi-rr-comment',     label: 'Messages'    },
+  { to: '/profile/edit',          icon: 'fi fi-rr-user',        label: 'Edit Profile'},
 ]
 
 const adminLinks = [
-  { to: '/admin',           icon: '📊', label: 'Dashboard' },
-  { to: '/admin/users',     icon: '👥', label: 'Users'     },
-  { to: '/admin/disputes',  icon: '⚖️',  label: 'Disputes' },
-  { to: '/admin/support',   icon: '🎧', label: 'Support' },
-  { to: '/profile/edit',    icon: '👤', label: 'Edit Profile' },
+  { to: '/admin',           icon: 'fi fi-rr-apps',            label: 'Dashboard' },
+  { to: '/admin/users',     icon: 'fi fi-rr-users',           label: 'Users'     },
+  { to: '/admin/disputes',  icon: 'fi fi-rr-scale-balanced',  label: 'Disputes'  },
+  { to: '/admin/support',   icon: 'fi fi-rr-headset',         label: 'Support'   },
+  { to: '/profile/edit',    icon: 'fi fi-rr-user',             label: 'Edit Profile' },
 ]
 
 export default function DashboardLayout({ children }) {
@@ -147,6 +147,7 @@ export default function DashboardLayout({ children }) {
               <Link 
                 key={link.to} 
                 to={link.to} 
+                className="sidebar-link"
                 onClick={() => isSmall && setSidebarOpen(false)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10,
@@ -159,7 +160,7 @@ export default function DashboardLayout({ children }) {
                 onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'var(--bg-hover)' }}
                 onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}
               >
-                <span style={{ fontSize: 16 }}>{link.icon}</span>
+                <i className={`${link.icon} sidebar-icon`} style={{ fontSize: 16 }}></i>
                 {link.label}
               </Link>
             )
@@ -167,7 +168,7 @@ export default function DashboardLayout({ children }) {
         </nav>
 
         {/* Dark mode toggle */}
-        <button onClick={toggleTheme} style={{
+        <button onClick={toggleTheme} className="sidebar-link" style={{
           display: 'flex', alignItems: 'center', gap: 10,
           padding: '11px 12px', borderRadius: 10, width: '100%',
           background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)',
@@ -178,18 +179,18 @@ export default function DashboardLayout({ children }) {
           onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
           onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-tertiary)'}
         >
-          <span>{theme === 'dark' ? '☀️' : '🌙'}</span>
+          <i className={`${theme === 'dark' ? 'fi fi-rr-sun' : 'fi fi-rr-moon'} sidebar-icon`} style={{ fontSize: 16 }}></i>
           {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
         </button>
 
         {/* Logout */}
-        <button onClick={logout} style={{
+        <button onClick={logout} className="sidebar-link" style={{
           display: 'flex', alignItems: 'center', gap: 10,
           padding: '11px 12px', borderRadius: 10, width: '100%',
           background: 'none', border: 'none', cursor: 'pointer',
           fontSize: 13, fontWeight: 600, color: '#dc2626', fontFamily: 'inherit',
         }}>
-          <span>🚪</span> Log out
+          <i className="fi fi-rr-exit sidebar-icon" style={{ fontSize: 16 }}></i> Log out
         </button>
       </aside>
 

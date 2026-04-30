@@ -64,9 +64,7 @@ export default function NotificationDropdown() {
           background: 'var(--bg-secondary)', cursor: 'pointer', position: 'relative',
         }}
       >
-        <svg width="18" height="18" fill="none" stroke="var(--text-secondary)" strokeWidth="2" viewBox="0 0 24 24">
-          <path d="M15 17H20L18.6 15.6A1 1 0 0118 14.8V11a6 6 0 00-12 0v3.8a1 1 0 01-.3.7L4 17h5m6 0v1a3 3 0 01-6 0v-1m6 0H9"/>
-        </svg>
+        <i className="fi fi-rr-bell" style={{ fontSize: 16, color: 'var(--text-secondary)' }}></i>
         {unread > 0 && (
           <span style={{
             position: 'absolute', top: -6, right: -6,

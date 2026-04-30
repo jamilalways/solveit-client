@@ -7,6 +7,7 @@ import Spinner from '../../components/common/Spinner'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import { getProblems } from '../../api/problems.api'
 import { useAuth } from '../../context/AuthContext'
+import useBreakpoint from '../../hooks/useBreakpoint'
 import { useDebounce } from '../../hooks/useDebounce'
 
 const CATEGORIES = ['All', 'Programming', 'Design', 'Writing', 'Data & Excel', 'Mobile App', 'Security', 'AI / ML', 'Video / Media', 'Home Services', 'Creative Work', 'Maintenance', 'Agriculture', 'Other']
@@ -15,6 +16,7 @@ const SORTS      = [{ label: 'Newest first', value: 'newest' }, { label: 'Budget
 
 export default function ProblemList() {
   const { user } = useAuth()
+  const { isSmall, isMobile } = useBreakpoint()
   const [problems, setProblems]   = useState([])
   const [loading, setLoading]     = useState(false)
   const [search, setSearch]       = useState('')
@@ -41,7 +43,7 @@ export default function ProblemList() {
   const content = (
     <div style={{ flex: 1 }}>
       {/* Header */}
-      <div style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-primary)', padding: '28px 32px', borderRadius: user ? 16 : 0, marginBottom: user ? 24 : 0 }}>
+      <div style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-primary)', padding: isMobile ? '20px' : '28px 32px', borderRadius: user ? 16 : 0, marginBottom: user ? 24 : 0 }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
             <div>
@@ -57,7 +59,7 @@ export default function ProblemList() {
 
           {/* Search bar */}
           <div style={{ position: 'relative', marginTop: 16 }}>
-            <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 16 }}>🔍</span>
+            <i className="fi fi-rr-search" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 16, color: 'var(--text-muted)' }}></i>
             <input
               type="text" placeholder="Search problems by title, keyword..."
               value={search} onChange={(e) => setSearch(e.target.value)}
@@ -69,29 +71,49 @@ export default function ProblemList() {
         </div>
       </div>
 
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: user ? '0' : '24px 32px', display: 'flex', gap: 24 }}>
+      <div style={{ 
+        maxWidth: 1100, 
+        margin: '0 auto', 
+        padding: isMobile ? '16px' : (user ? '0' : '24px 32px'), 
+        display: 'flex', 
+        flexDirection: isSmall ? 'column' : 'row',
+        gap: 24 
+      }}>
         {/* Sidebar filters */}
-        <aside style={{ width: 200, flexShrink: 0 }}>
-          <div style={{ background: 'var(--bg-card)', border: '1.5px solid var(--border-primary)', borderRadius: 14, padding: 18, marginBottom: 12 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 12 }}>Category</div>
-            {CATEGORIES.map((c) => (
-              <div key={c} onClick={() => setCategory(c)} style={{
-                fontSize: 13, fontWeight: 600, padding: '7px 10px', borderRadius: 8, cursor: 'pointer', marginBottom: 2,
-                color: category === c ? 'var(--text-brand)' : 'var(--text-secondary)',
-                background: category === c ? 'var(--bg-accent)' : 'transparent',
-              }}>{c}</div>
-            ))}
-          </div>
-          <div style={{ background: 'var(--bg-card)', border: '1.5px solid var(--border-primary)', borderRadius: 14, padding: 18, marginBottom: 12 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 12 }}>Budget</div>
-            {BUDGETS.map((b) => (
-              <div key={b.value} onClick={() => setBudget(b.value)} style={{
-                fontSize: 13, fontWeight: 600, padding: '7px 10px', borderRadius: 8, cursor: 'pointer', marginBottom: 2,
-                color: budget === b.value ? 'var(--text-brand)' : 'var(--text-secondary)',
-                background: budget === b.value ? 'var(--bg-accent)' : 'transparent',
-              }}>{b.label}</div>
-            ))}
-          </div>
+        <aside style={{ width: isSmall ? '100%' : 200, flexShrink: 0 }}>
+          {isSmall ? (
+            <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 10, marginBottom: 10, scrollbarWidth: 'none' }}>
+              <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ padding: '8px 12px', borderRadius: 10, border: '1.5px solid var(--border-primary)', background: 'var(--bg-card)', fontSize: 13, color: 'var(--text-primary)' }}>
+                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <select value={budget} onChange={(e) => setBudget(e.target.value)} style={{ padding: '8px 12px', borderRadius: 10, border: '1.5px solid var(--border-primary)', background: 'var(--bg-card)', fontSize: 13, color: 'var(--text-primary)' }}>
+                {BUDGETS.map(b => <option key={b.value} value={b.value}>{b.label}</option>)}
+              </select>
+            </div>
+          ) : (
+            <>
+              <div style={{ background: 'var(--bg-card)', border: '1.5px solid var(--border-primary)', borderRadius: 14, padding: 18, marginBottom: 12 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 12 }}>Category</div>
+                {CATEGORIES.map((c) => (
+                  <div key={c} onClick={() => setCategory(c)} style={{
+                    fontSize: 13, fontWeight: 600, padding: '7px 10px', borderRadius: 8, cursor: 'pointer', marginBottom: 2,
+                    color: category === c ? 'var(--text-brand)' : 'var(--text-secondary)',
+                    background: category === c ? 'var(--bg-accent)' : 'transparent',
+                  }}>{c}</div>
+                ))}
+              </div>
+              <div style={{ background: 'var(--bg-card)', border: '1.5px solid var(--border-primary)', borderRadius: 14, padding: 18, marginBottom: 12 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 12 }}>Budget</div>
+                {BUDGETS.map((b) => (
+                  <div key={b.value} onClick={() => setBudget(b.value)} style={{
+                    fontSize: 13, fontWeight: 600, padding: '7px 10px', borderRadius: 8, cursor: 'pointer', marginBottom: 2,
+                    color: budget === b.value ? 'var(--text-brand)' : 'var(--text-secondary)',
+                    background: budget === b.value ? 'var(--bg-accent)' : 'transparent',
+                  }}>{b.label}</div>
+                ))}
+              </div>
+            </>
+          )}
         </aside>
 
         {/* Problems grid */}
@@ -108,12 +130,12 @@ export default function ProblemList() {
             <Spinner />
           ) : problems.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 24px', color: 'var(--text-muted)' }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
+              <div style={{ fontSize: 40, marginBottom: 12, color: 'var(--text-muted)' }}><i className="fi fi-rr-search"></i></div>
               <div style={{ fontSize: 16, fontWeight: 700 }}>No problems found</div>
               <div style={{ fontSize: 13, marginTop: 6 }}>Try adjusting your filters</div>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: 14 }}>
               {problems.map((p) => <ProblemCard key={p._id} problem={p} />)}
             </div>
           )}

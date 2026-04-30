@@ -11,6 +11,7 @@ import { submitBid, acceptBid, rejectBid } from '../../api/bids.api'
 import { formatBDT } from '../../utils/formatCurrency'
 import { formatDate, daysLeft } from '../../utils/formatDate'
 import getImageUrl from '../../utils/getImageUrl'
+import useBreakpoint from '../../hooks/useBreakpoint'
 // Demo data
 const DEMO = {
   _id: '1', title: 'Build a REST API for e-commerce app with Node.js',
@@ -21,8 +22,8 @@ const DEMO = {
   files: [], bidsCount: 7, createdAt: new Date(Date.now() - 2 * 86400000),
   client: { _id: 'c1', name: 'Arif Khan', avgRating: 4.8 },
   bids: [
-    { _id: 'b1', solver: { name: 'Samin Reza', avgRating: 4.9 }, proposedPrice: 3200, deliveryDays: 5, message: 'I have 4 years of Node.js experience and have built 20+ APIs. I can deliver this with full Swagger docs and unit tests.', status: 'pending', createdAt: new Date(Date.now() - 86400000) },
-    { _id: 'b2', solver: { name: 'Rafiq Dev',  avgRating: 4.5 }, proposedPrice: 3500, deliveryDays: 7, message: 'Expert in MERN stack. Will include Postman collection and deployment to Railway.', status: 'pending', createdAt: new Date(Date.now() - 43200000) },
+    { _id: 'b1', solver: { _id: 's1', name: 'Samin Reza', avgRating: 4.9 }, proposedPrice: 3200, deliveryDays: 5, message: 'I have 4 years of Node.js experience and have built 20+ APIs. I can deliver this with full Swagger docs and unit tests.', status: 'pending', createdAt: new Date(Date.now() - 86400000) },
+    { _id: 'b2', solver: { _id: 's2', name: 'Rafiq Dev',  avgRating: 4.5 }, proposedPrice: 3500, deliveryDays: 7, message: 'Expert in MERN stack. Will include Postman collection and deployment to Railway.', status: 'pending', createdAt: new Date(Date.now() - 43200000) },
   ],
 }
 
@@ -30,6 +31,7 @@ export default function ProblemDetail() {
   const { id }   = useParams()
   const { user } = useAuth()
   const navigate = useNavigate()
+  const { isSmall, isMobile } = useBreakpoint()
 
   const [problem, setProblem]   = useState(DEMO)
   const [loading, setLoading]   = useState(false)
@@ -90,7 +92,15 @@ export default function ProblemDetail() {
   const dl = daysLeft(problem.deadline)
 
   const content = (
-    <div style={{ maxWidth: 1000, margin: '0 auto', padding: user ? '0 0 60px' : '28px 24px', display: 'grid', gridTemplateColumns: '1fr 300px', gap: 24, alignItems: 'start' }}>
+    <div style={{ 
+      maxWidth: 1000, 
+      margin: '0 auto', 
+      padding: isMobile ? '16px 16px 60px' : (user ? '0 0 60px' : '28px 24px'), 
+      display: 'grid', 
+      gridTemplateColumns: isSmall ? '1fr' : '1fr 300px', 
+      gap: 24, 
+      alignItems: 'start' 
+    }}>
       {/* LEFT */}
       <div>
         {/* Problem card */}
@@ -126,7 +136,7 @@ export default function ProblemDetail() {
                         </div>
                       ) : (
                         <a href={fileUrl} target="_blank" rel="noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--bg-accent)', color: 'var(--text-brand)', padding: '8px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
-                          📎 {f.name}
+                          <i className="fi fi-rr-paperclip"></i> {f.name}
                         </a>
                       )}
                     </div>
@@ -153,7 +163,7 @@ export default function ProblemDetail() {
             ))}
             {(!problem.bids || problem.bids.length === 0) && (
               <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-muted)', background: 'var(--bg-card)', borderRadius: 14, border: '1.5px solid var(--border-primary)' }}>
-                <div style={{ fontSize: 32, marginBottom: 8 }}>📭</div>
+                <div style={{ fontSize: 32, marginBottom: 8 }}><i className="fi fi-rr-box-open"></i></div>
                 <div style={{ fontSize: 14, fontWeight: 600 }}>No proposals yet</div>
                 <div style={{ fontSize: 12, marginTop: 4 }}>Be the first to submit a proposal</div>
               </div>
@@ -163,7 +173,7 @@ export default function ProblemDetail() {
       </div>
 
       {/* RIGHT SIDEBAR */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, order: isSmall ? -1 : 0 }}>
         {/* Budget & details */}
         <div style={{ background: 'var(--bg-card)', border: '1.5px solid var(--border-primary)', borderRadius: 16, padding: 20 }}>
           <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--text-brand)', marginBottom: 4 }}>
@@ -187,7 +197,9 @@ export default function ProblemDetail() {
           ))}
           {isSolver && problem.status === 'open' && (
             <button onClick={() => setBidModal(true)} style={{ width: '100%', background: 'var(--color-primary-600)', color: '#fff', border: 'none', padding: '11px', borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', marginTop: 14 }}>
-              Submit Proposal →
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                Submit Proposal <i className="fi fi-rr-paper-plane" style={{ fontSize: 13 }}></i>
+              </span>
             </button>
           )}
         </div>
@@ -244,7 +256,11 @@ export default function ProblemDetail() {
             />
           </div>
           <button type="submit" disabled={bidLoading} style={{ width: '100%', background: bidLoading ? '#a5b4fc' : '#4f46e5', color: '#fff', border: 'none', padding: 12, borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-            {bidLoading ? 'Submitting...' : 'Submit Proposal →'}
+            {bidLoading ? 'Submitting...' : (
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                Submit Proposal <i className="fi fi-rr-paper-plane" style={{ fontSize: 13 }}></i>
+              </span>
+            )}
           </button>
         </form>
       </Modal>

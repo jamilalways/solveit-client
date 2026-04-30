@@ -71,12 +71,12 @@ export default function Navbar() {
             width: 38, height: 38, borderRadius: 10, border: '1.5px solid var(--border-secondary)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             background: 'var(--bg-secondary)', cursor: 'pointer', fontSize: 16,
-            transition: 'all .15s',
+            transition: 'all .15s', color: 'var(--text-secondary)'
           }}
           onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
           onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-secondary)'}
         >
-          {theme === 'dark' ? '☀️' : '🌙'}
+          {theme === 'dark' ? <i className="fi fi-rr-sun"></i> : <i className="fi fi-rr-moon-stars"></i>}
         </button>
 
         {!isSmall ? (
@@ -87,8 +87,9 @@ export default function Navbar() {
                   width: 38, height: 38, borderRadius: 10, border: '1.5px solid var(--border-secondary)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   textDecoration: 'none', background: 'var(--bg-secondary)', fontSize: 16,
+                  color: 'var(--text-secondary)'
                 }}>
-                  💬
+                  <i className="fi fi-rr-comment"></i>
                 </Link>
                 <NotificationDropdown />
                 <Link to="/profile/edit" style={{
@@ -161,14 +162,19 @@ export default function Navbar() {
           {user && (
             <>
               <Link to={dashPath} onClick={() => setMenuOpen(false)} style={linkStyle(dashPath)}>Dashboard</Link>
-              <Link to="/messages" onClick={() => setMenuOpen(false)} style={linkStyle('/messages')}>Messages 💬</Link>
-              <Link to="/profile/edit" onClick={() => setMenuOpen(false)} style={linkStyle('/profile/edit')}>Profile 👤</Link>
+              <Link to="/messages" onClick={() => setMenuOpen(false)} style={linkStyle('/messages')}>
+                <i className="fi fi-rr-comment" style={{ marginRight: 8 }}></i> Messages
+              </Link>
+              <Link to="/profile/edit" onClick={() => setMenuOpen(false)} style={linkStyle('/profile/edit')}>
+                <i className="fi fi-rr-user" style={{ marginRight: 8 }}></i> Profile
+              </Link>
               <div style={{ height: 1, background: 'var(--border-primary)', margin: '10px 0' }} />
               <button onClick={handleLogout} style={{
                 textAlign: 'left', padding: '12px 16px', background: 'none', border: 'none',
                 color: '#dc2626', fontSize: 16, fontWeight: 700, fontFamily: 'inherit',
+                display: 'flex', alignItems: 'center', gap: 10
               }}>
-                🚪 Log out
+                <i className="fi fi-rr-exit"></i> Log out
               </button>
             </>
           )}

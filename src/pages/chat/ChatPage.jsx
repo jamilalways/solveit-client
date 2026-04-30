@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import { useAuth } from '../../context/AuthContext'
 import { useSocket } from '../../context/SocketContext'
-import { getMessages } from '../../api/chat.api'
+import { getMessages, sendMessage } from '../../api/chat.api'
 import { getContract, completeContract, submitSolution } from '../../api/contracts.api'
 import { timeAgo } from '../../utils/formatDate'
 
@@ -50,13 +50,19 @@ export default function ChatPage() {
   const handleSend = async (e) => {
     e.preventDefault()
     if (!text.trim()) return
+    const msgText = text.trim()
+    setText('')
     setSending(true)
 
-    if (socket) {
-      socket.emit('send_message', { contractId, message: text.trim() })
+    try {
+      await sendMessage(contractId, { text: msgText })
+    } catch (err) {
+      console.error('Send contract message failed:', err)
+      alert('Failed to send message. Please check your connection.')
+      setText(msgText)
+    } finally {
+      setSending(false)
     }
-    setText('')
-    setSending(false)
   }
 
   const handleReleasePayment = async () => {
@@ -90,6 +96,35 @@ export default function ChatPage() {
   const myId = user?._id
   const isClient = user?.role === 'client'
   
+  const StatusStepper = ({ status }) => {
+    if (!status) return null
+    const steps = [
+      { id: 'active', label: 'Working' },
+      { id: 'submitted', label: 'Reviewing' },
+      { id: 'completed', label: 'Done' }
+    ]
+    const getStepIndex = (s) => steps.findIndex(step => step.id === s)
+    const currentIndex = getStepIndex(status)
+
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 20 }}>
+        {steps.map((step, i) => (
+          <div key={step.id} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div style={{
+              fontSize: 9, fontWeight: 800, padding: '3px 8px', borderRadius: 6, textTransform: 'uppercase',
+              background: i <= currentIndex ? 'var(--bg-accent)' : 'var(--bg-tertiary)',
+              color: i <= currentIndex ? 'var(--text-brand)' : 'var(--text-faint)',
+              border: i === currentIndex ? '1.5px solid var(--text-brand)' : '1.5px solid transparent',
+            }}>
+              {step.label}
+            </div>
+            {i < steps.length - 1 && <i className="fi fi-rr-angle-small-right" style={{ fontSize: 12, color: 'var(--text-faint)' }}></i>}
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   // Determine who the other person is based on contract
   let other = { name: 'Chat Partner', avatar: null }
   if (contract) {
@@ -102,13 +137,20 @@ export default function ChatPage() {
       <div style={{ flex: 1, maxWidth: 780, margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', height: 'calc(100vh - 100px)' }}>
         {/* Chat header */}
         <div style={{ background: 'var(--bg-card)', border: '1.5px solid var(--border-primary)', borderRadius: '16px 16px 0 0', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--bg-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: 'var(--text-brand)' }}>
-            {other.name.slice(0, 2).toUpperCase()}
+          <div 
+            onClick={() => navigate(`/profile/${other._id || (isClient ? contract?.solver?._id : contract?.client?._id)}`)}
+            style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}
+          >
+            <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--bg-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: 'var(--text-brand)' }}>
+              {other.name.slice(0, 2).toUpperCase()}
+            </div>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{other.name}</div>
+              <div style={{ fontSize: 11, color: 'var(--success-text)', fontWeight: 600 }}>● Active</div>
+            </div>
           </div>
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{other.name}</div>
-            <div style={{ fontSize: 11, color: 'var(--success-text)', fontWeight: 600 }}>● Active</div>
-          </div>
+          
+          <StatusStepper status={contract?.status} />
           
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 16 }}>
             {/* Solver: Submit Work button */}
@@ -127,18 +169,18 @@ export default function ChatPage() {
             )}
 
             {/* Client: Release Payment button */}
-            {isClient && contract && (contract.status === 'active' || contract.status === 'submitted') && (
+            {isClient && contract && contract.status === 'submitted' && (
               <button 
                 onClick={handleReleasePayment} 
                 disabled={actionLoading}
                 title="Release the held escrow to the solver and complete the job"
                 style={{
-                  background: contract.status === 'submitted' ? 'var(--status-done-color)' : 'var(--text-faint)', 
+                  background: 'var(--status-done-color)', 
                   color: '#fff', border: 'none',
                   padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
                   cursor: actionLoading ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
                 }}>
-                {actionLoading ? 'Processing...' : contract.status === 'submitted' ? '✓ Release Payment' : '✓ Early Release Payment'}
+                {actionLoading ? 'Processing...' : '✓ Release Payment'}
               </button>
             )}
             
@@ -198,7 +240,7 @@ export default function ChatPage() {
             border: 'none', padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700,
             cursor: text.trim() ? 'pointer' : 'not-allowed', fontFamily: 'inherit', whiteSpace: 'nowrap',
           }}>
-            Send →
+            {sending ? '...' : <i className="fi fi-rr-paper-plane"></i>}
           </button>
         </form>
       </div>
