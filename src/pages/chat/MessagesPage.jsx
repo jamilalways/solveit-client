@@ -337,60 +337,80 @@ export default function MessagesPage() {
                 const conv = conversations.find((c) => c._id === conversationId)
                 const other = conv ? getOtherUser(conv) : { name: 'Chat' }
                 return (
-                  <div style={{ padding: isMobile ? '12px 16px' : '14px 20px', borderBottom: '1px solid var(--border-primary)', display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ 
+                    padding: isMobile ? '10px 14px' : '14px 20px', 
+                    borderBottom: '1px solid var(--border-primary)', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: isMobile ? 8 : 12,
+                    background: 'var(--bg-card)',
+                    zIndex: 10,
+                  }}>
                     {isMobile && (
                       <button 
                         onClick={() => navigate('/messages')}
-                        style={{ background: 'none', border: 'none', padding: '4px 8px', marginLeft: -8, cursor: 'pointer', color: 'var(--text-primary)' }}
+                        style={{ background: 'none', border: 'none', padding: '4px 4px', cursor: 'pointer', color: 'var(--text-primary)' }}
                       >
                         <i className="fi fi-rr-arrow-left" style={{ fontSize: 18 }}></i>
                       </button>
                     )}
                     <div 
                       onClick={() => navigate(`/profile/${other._id}`)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', minWidth: 0 }}
+                      style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 10, cursor: 'pointer', minWidth: 0, flex: 1 }}
                     >
-                      {renderAvatar(other, 34)}
+                      {renderAvatar(other, isMobile ? 32 : 36)}
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{other.name}</div>
+                        <div style={{ fontSize: isMobile ? 13 : 14, fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{other.name}</div>
                         {conv?.problem && !isMobile && (
                           <div style={{ fontSize: 11, color: 'var(--text-brand)', fontWeight: 600 }}>
                             Topic: {conv.problem.title}
                           </div>
                         )}
-                        <div style={{ fontSize: 11, color: 'var(--success-text)', fontWeight: 600 }}>● Online</div>
+                        <div style={{ fontSize: 10, color: 'var(--success-text)', fontWeight: 600 }}>● Online</div>
                       </div>
                     </div>
 
-                    {/* Status Stepper */}
+                    {/* Status Display */}
                     {activeContract && (
-                      <div style={{ marginLeft: 20 }}>
-                        <StatusStepper status={activeContract.status} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {!isMobile ? (
+                          <StatusStepper status={activeContract.status} />
+                        ) : (
+                          <div style={{
+                            fontSize: 9, fontWeight: 800, padding: '3px 7px', borderRadius: 6, textTransform: 'uppercase',
+                            background: 'var(--bg-accent)', color: 'var(--text-brand)', border: '1px solid var(--text-brand)',
+                            whiteSpace: 'nowrap'
+                          }}>
+                            {activeContract.status === 'active' ? 'Working' : activeContract.status === 'submitted' ? 'Reviewing' : 'Done'}
+                          </div>
+                        )}
                       </div>
                     )}
 
-                    <div style={{ marginLeft: 'auto', display: 'flex', gap: 10 }}>
+                    <div style={{ marginLeft: isMobile ? 0 : 'auto', display: 'flex', gap: 6 }}>
                       {/* Solver Action */}
                       {user?.role === 'solver' && activeContract && activeContract.status === 'active' && (
                         <button onClick={handleSubmitWork} disabled={actionLoading} style={{
-                          background: '#2563eb', color: '#fff', border: 'none', padding: '6px 12px',
-                          borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: actionLoading ? 'not-allowed' : 'pointer',
+                          background: '#2563eb', color: '#fff', border: 'none', padding: isMobile ? '5px 10px' : '6px 12px',
+                          borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: actionLoading ? 'not-allowed' : 'pointer',
+                          whiteSpace: 'nowrap'
                         }}>
-                          {actionLoading ? '...' : 'Submit Work'}
+                          {actionLoading ? '...' : isMobile ? 'Submit' : 'Submit Work'}
                         </button>
                       )}
 
                       {/* Client Action */}
                       {user?.role === 'client' && activeContract && activeContract.status === 'submitted' && (
                         <button onClick={handleReleasePayment} disabled={actionLoading} style={{
-                          background: 'var(--status-done-color)', color: '#fff', border: 'none', padding: '6px 12px',
-                          borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: actionLoading ? 'not-allowed' : 'pointer',
+                          background: 'var(--status-done-color)', color: '#fff', border: 'none', padding: isMobile ? '5px 10px' : '6px 12px',
+                          borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: actionLoading ? 'not-allowed' : 'pointer',
+                          whiteSpace: 'nowrap'
                         }}>
-                          {actionLoading ? '...' : 'Release Payment'}
+                          {actionLoading ? '...' : isMobile ? 'Release' : 'Release Payment'}
                         </button>
                       )}
                       
-                      {activeContract?.status === 'completed' && (
+                      {activeContract?.status === 'completed' && !isMobile && (
                         <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--status-done-color)', background: 'var(--status-done-bg)', padding: '4px 10px', borderRadius: 6 }}>
                           Contract Completed
                         </span>
