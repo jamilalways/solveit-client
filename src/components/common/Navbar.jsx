@@ -24,7 +24,10 @@ export default function Navbar() {
     user?.role === 'client' ? '/dashboard/client' :
     user?.role === 'solver' ? '/dashboard/solver' : '/admin'
 
-  const isActive = (path) => location.pathname === path
+  const isActive = (path) => {
+    if (path === '/messages') return location.pathname.startsWith('/messages')
+    return location.pathname === path
+  }
 
   const linkStyle = (path) => ({
     fontSize: isSmall ? 16 : 14, 

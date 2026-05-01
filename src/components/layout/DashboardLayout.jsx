@@ -142,7 +142,9 @@ export default function DashboardLayout({ children }) {
         {/* Nav links */}
         <nav style={{ flex: 1 }}>
           {links.map((link) => {
-            const active = location.pathname === link.to
+            const active = link.to === '/messages' 
+              ? location.pathname.startsWith('/messages')
+              : location.pathname === link.to
             return (
               <Link 
                 key={link.to} 

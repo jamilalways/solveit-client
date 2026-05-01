@@ -41,8 +41,9 @@ export default function PublicProfile() {
     try {
       const res = await startConversation(id)
       navigate(`/messages/${res.data.conversation._id}`)
-    } catch {
-      // failed
+    } catch (err) {
+      console.error('Failed to start conversation:', err)
+      alert(err.response?.data?.message || 'Failed to open messages. Please try again.')
     }
     setMsgLoading(false)
   }

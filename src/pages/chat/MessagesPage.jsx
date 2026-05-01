@@ -7,6 +7,7 @@ import { useSocket } from '../../context/SocketContext'
 import { getConversations, getDirectMessages, startConversation, sendDirectMessage } from '../../api/dm.api'
 import { getContractByProblem, submitSolution, completeContract } from '../../api/contracts.api'
 import { timeAgo } from '../../utils/formatDate'
+import useBreakpoint from '../../hooks/useBreakpoint'
 import getImageUrl from '../../utils/getImageUrl'
 
 export default function MessagesPage() {
@@ -14,10 +15,10 @@ export default function MessagesPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const socket   = useSocket()
+  const { isMobile } = useBreakpoint()
   const bottomRef = useRef(null)
 
   const [conversations, setConversations] = useState([])
-  const [activeConv, setActiveConv]       = useState(conversationId || null)
   const [messages, setMessages]           = useState([])
   const [text, setText]                   = useState('')
   const [loading, setLoading]             = useState(true)
@@ -25,37 +26,45 @@ export default function MessagesPage() {
   const [sending, setSending]             = useState(false)
   const [activeContract, setActiveContract] = useState(null)
   const [actionLoading, setActionLoading] = useState(false)
-
-  // Sync activeConv with URL param
-  useEffect(() => {
-    if (conversationId && conversationId !== activeConv) {
-      setActiveConv(conversationId)
-    }
-  }, [conversationId, activeConv])
+  const [filter, setFilter]                   = useState('all') // all | problem | personal
 
   // Fetch conversation list
-  useEffect(() => {
-    const fetch = async () => {
-      try {
-        const res = await getConversations()
-        setConversations(res.data.conversations || [])
-      } catch { /* empty */ }
+  const fetchConversations = async () => {
+    try {
+      const res = await getConversations()
+      setConversations(res.data.conversations || [])
+    } catch (err) {
+      console.error('Failed to fetch conversations:', err)
+    } finally {
       setLoading(false)
     }
-    fetch()
+  }
+
+  useEffect(() => {
+    fetchConversations()
   }, [])
 
-  // When activeConv changes, fetch messages
+  // When conversationId changes, fetch messages
   useEffect(() => {
-    if (!activeConv) return
+    if (!conversationId) {
+      setMessages([])
+      setActiveContract(null)
+      return
+    }
+
     const fetchMsgs = async () => {
       setMsgLoading(true)
       try {
-        const res = await getDirectMessages(activeConv)
+        const res = await getDirectMessages(conversationId)
         setMessages(res.data.messages || [])
 
+        // If this conversation is not in our list, refresh the list
+        if (!conversations.find(c => c._id === conversationId)) {
+          fetchConversations()
+        }
+
         // Also fetch contract if there's a problem linked
-        const conv = conversations.find(c => c._id === activeConv)
+        const conv = conversations.find(c => c._id === conversationId)
         if (conv?.problem) {
           try {
             const cRes = await getContractByProblem(conv.problem._id || conv.problem)
@@ -64,30 +73,45 @@ export default function MessagesPage() {
         } else {
           setActiveContract(null)
         }
-      } catch { /* empty */ }
-      setMsgLoading(false)
+      } catch (err) {
+        console.error('Failed to fetch messages:', err)
+      } finally {
+        setMsgLoading(false)
+      }
     }
+
     fetchMsgs()
-  }, [activeConv, conversations])
+  }, [conversationId, conversations.length]) // conversations.length triggers re-check if list was empty
 
   // Socket join/leave
   useEffect(() => {
-    if (!socket || !activeConv) return
-    socket.emit('join_dm', activeConv)
-    socket.on('receive_dm', (msg) => {
-      setMessages((prev) => [...prev, msg])
-      // Update conversation list last message
+    if (!socket || !conversationId) return
+    socket.emit('join_dm', conversationId)
+    
+    const handleReceive = (msg) => {
+      // Only append if it's for the current conversation
+      if (msg.conversation === conversationId) {
+        setMessages((prev) => {
+          // Prevent duplicates if we already added it via optimistic update
+          if (prev.find(m => m._id === msg._id)) return prev
+          return [...prev, msg]
+        })
+      }
+      
+      // Update conversation list last message regardless
       setConversations((prev) =>
         prev.map((c) =>
-          c._id === activeConv ? { ...c, lastMessage: msg.text, lastMessageAt: msg.createdAt, unreadCount: 0 } : c
+          c._id === msg.conversation ? { ...c, lastMessage: msg.text, lastMessageAt: msg.createdAt, unreadCount: c._id === conversationId ? 0 : (c.unreadCount || 0) + 1 } : c
         )
       )
-    })
-    return () => {
-      socket.emit('leave_dm', activeConv)
-      socket.off('receive_dm')
     }
-  }, [socket, activeConv])
+
+    socket.on('receive_dm', handleReceive)
+    return () => {
+      socket.emit('leave_dm', conversationId)
+      socket.off('receive_dm', handleReceive)
+    }
+  }, [socket, conversationId])
 
   // Auto-scroll
   useEffect(() => {
@@ -96,13 +120,24 @@ export default function MessagesPage() {
 
   const handleSend = async (e) => {
     e.preventDefault()
-    if (!text.trim() || !activeConv) return
+    if (!text.trim() || !conversationId) return
     const msgText = text.trim()
     setText('')
     setSending(true)
     
     try {
-      await sendDirectMessage(activeConv, { text: msgText })
+      const res = await sendDirectMessage(conversationId, { text: msgText })
+      // Immediate update for better responsiveness
+      const newMsg = res.data.message
+      setMessages((prev) => {
+        if (prev.find(m => m._id === newMsg._id)) return prev
+        return [...prev, newMsg]
+      })
+      setConversations((prev) =>
+        prev.map((c) =>
+          c._id === conversationId ? { ...c, lastMessage: newMsg.text, lastMessageAt: newMsg.createdAt } : c
+        )
+      )
     } catch (err) {
       console.error('Send message failed:', err)
       alert('Failed to send message. Please check your connection.')
@@ -193,27 +228,58 @@ export default function MessagesPage() {
     )
   }
 
+  const filteredConversations = conversations.filter(c => {
+    if (filter === 'problem') return !!c.problem
+    if (filter === 'personal') return !c.problem
+    return true
+  })
+
   return (
     <DashboardLayout>
-      <div style={{ flex: 1, maxWidth: 1000, margin: '0 auto', width: '100%', display: 'flex', height: 'calc(100vh - 100px)', background: 'var(--bg-card)', borderRadius: 16, border: '1.5px solid var(--border-primary)', overflow: 'hidden' }}>
+      <div style={{ flex: 1, maxWidth: 1000, margin: '0 auto', width: '100%', display: 'flex', height: 'calc(100vh - 100px)', background: 'var(--bg-card)', borderRadius: isMobile ? 0 : 16, border: isMobile ? 'none' : '1.5px solid var(--border-primary)', overflow: 'hidden' }}>
         {/* Left — Conversation list */}
-        <div style={{ width: 300, borderRight: '1.5px solid var(--border-primary)', display: 'flex', flexDirection: 'column', background: 'var(--bg-card)', overflow: 'hidden' }}>
+        <div style={{ 
+          width: isMobile ? '100%' : 300, 
+          borderRight: isMobile ? 'none' : '1.5px solid var(--border-primary)', 
+          display: isMobile && conversationId ? 'none' : 'flex', 
+          flexDirection: 'column', 
+          background: 'var(--bg-card)', 
+          overflow: 'hidden' 
+        }}>
           <div style={{ padding: '18px 20px', borderBottom: '1px solid var(--border-primary)' }}>
-            <h2 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}> Messages</h2>
+            <h2 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 14px' }}> Messages</h2>
+            <div style={{ display: 'flex', gap: 4, background: 'var(--bg-tertiary)', padding: 3, borderRadius: 10 }}>
+              {['all', 'problem', 'personal'].map(f => (
+                <button 
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  style={{
+                    flex: 1, padding: '6px 0', borderRadius: 8, fontSize: 11, fontWeight: 700,
+                    border: 'none', cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize',
+                    background: filter === f ? 'var(--bg-card)' : 'transparent',
+                    color: filter === f ? 'var(--text-brand)' : 'var(--text-faint)',
+                    boxShadow: filter === f ? '0 2px 8px rgba(0,0,0,0.05)' : 'none',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {f === 'problem' ? 'Job Based' : f}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div style={{ flex: 1, overflowY: 'auto' }}>
-            {loading ? <Spinner /> : conversations.length === 0 ? (
+            {loading ? <Spinner /> : filteredConversations.length === 0 ? (
               <div style={{ textAlign: 'center', padding: 32, color: 'var(--text-muted)', fontSize: 13 }}>
-                No conversations yet
+                No {filter !== 'all' ? filter : ''} conversations yet
               </div>
             ) : (
-              conversations.map((conv) => {
+              filteredConversations.map((conv) => {
                 const other = getOtherUser(conv)
-                const isActive = conv._id === activeConv
+                const isActive = conv._id === conversationId
                 return (
                   <div key={conv._id}
-                    onClick={() => { setActiveConv(conv._id); navigate(`/messages/${conv._id}`, { replace: true }) }}
+                    onClick={() => { navigate(`/messages/${conv._id}`, { replace: true }) }}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 12,
                       padding: '14px 16px', cursor: 'pointer',
@@ -251,8 +317,14 @@ export default function MessagesPage() {
         </div>
 
         {/* Right — Chat area */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg-card)', overflow: 'hidden' }}>
-          {!activeConv ? (
+        <div style={{ 
+          flex: 1, 
+          display: isMobile && !conversationId ? 'none' : 'flex', 
+          flexDirection: 'column', 
+          background: 'var(--bg-card)', 
+          overflow: 'hidden' 
+        }}>
+          {!conversationId ? (
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 8, color: 'var(--text-muted)' }}>
               <span style={{ fontSize: 48 }}>💬</span>
               <span style={{ fontSize: 15, fontWeight: 600 }}>Select a conversation</span>
@@ -262,18 +334,26 @@ export default function MessagesPage() {
             <>
               {/* Chat header */}
               {(() => {
-                const conv = conversations.find((c) => c._id === activeConv)
+                const conv = conversations.find((c) => c._id === conversationId)
                 const other = conv ? getOtherUser(conv) : { name: 'Chat' }
                 return (
-                  <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-primary)', display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ padding: isMobile ? '12px 16px' : '14px 20px', borderBottom: '1px solid var(--border-primary)', display: 'flex', alignItems: 'center', gap: 12 }}>
+                    {isMobile && (
+                      <button 
+                        onClick={() => navigate('/messages')}
+                        style={{ background: 'none', border: 'none', padding: '4px 8px', marginLeft: -8, cursor: 'pointer', color: 'var(--text-primary)' }}
+                      >
+                        <i className="fi fi-rr-arrow-left" style={{ fontSize: 18 }}></i>
+                      </button>
+                    )}
                     <div 
                       onClick={() => navigate(`/profile/${other._id}`)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', minWidth: 0 }}
                     >
-                      {renderAvatar(other, 36)}
-                      <div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{other.name}</div>
-                        {conv?.problem && (
+                      {renderAvatar(other, 34)}
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{other.name}</div>
+                        {conv?.problem && !isMobile && (
                           <div style={{ fontSize: 11, color: 'var(--text-brand)', fontWeight: 600 }}>
                             Topic: {conv.problem.title}
                           </div>
@@ -366,7 +446,7 @@ export default function MessagesPage() {
                   border: 'none', padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 700,
                   cursor: text.trim() ? 'pointer' : 'not-allowed', fontFamily: 'inherit', whiteSpace: 'nowrap',
                 }}>
-                  Send →
+                  {sending ? '...' : 'Send →'}
                 </button>
               </form>
             </>
