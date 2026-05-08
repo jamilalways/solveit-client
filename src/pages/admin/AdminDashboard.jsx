@@ -47,27 +47,24 @@ const DEMO_PROBLEMS = [
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 const statusStyle = {
-  open:         { bg: '#f5f3ff', color: '#7c3aed' },
-  active:       { bg: '#eff6ff', color: '#2563eb' },
-  in_review:    { bg: '#fffbeb', color: '#d97706' },
-  completed:    { bg: '#f0fdf4', color: '#16a34a' },
-  cancelled:    { bg: '#fef2f2', color: '#dc2626' },
-  under_review: { bg: '#fff7ed', color: '#ea580c' },
-  resolved:     { bg: '#f0fdf4', color: '#16a34a' },
+  open:         { bg: 'var(--status-open-bg)',   color: 'var(--status-open-color)' },
+  active:       { bg: 'var(--status-active-bg)', color: 'var(--status-active-color)' },
+  in_review:    { bg: 'var(--status-review-bg)', color: 'var(--status-review-color)' },
+  completed:    { bg: 'var(--status-done-bg)',   color: 'var(--status-done-color)' },
+  cancelled:    { bg: 'var(--error-bg)',         color: 'var(--error-text)' },
+  under_review: { bg: 'var(--status-review-bg)', color: 'var(--status-review-color)' },
+  resolved:     { bg: 'var(--status-done-bg)',   color: 'var(--status-done-color)' },
 }
 
 // ─── Stat Card ─────────────────────────────────────────────────────────────
-function StatCard({ label, value, icon, color, dark, isMobile }) {
-  const card  = dark ? '#1a1a2e' : '#fff'
-  const border = dark ? '#2a2a3d' : '#f0f0f8'
-  const sub    = dark ? '#888'    : '#999'
+function StatCard({ label, value, icon, color, isMobile }) {
   return (
-    <div style={{ background: card, border: `1.5px solid ${border}`, borderRadius: 14, padding: isMobile ? '14px 18px' : '18px 22px', display: 'flex', alignItems: 'center', gap: isMobile ? 12 : 16 }}>
+    <div style={{ background: 'var(--bg-card)', border: '1.5px solid var(--border-primary)', borderRadius: 14, padding: isMobile ? '14px 18px' : '18px 22px', display: 'flex', alignItems: 'center', gap: isMobile ? 12 : 16 }}>
       <div style={{ width: isMobile ? 40 : 48, height: isMobile ? 40 : 48, borderRadius: 12, background: color + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? 18 : 22, flexShrink: 0 }}>
         {icon}
       </div>
       <div>
-        <div style={{ fontSize: 10, fontWeight: 700, color: sub, textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 2 }}>{label}</div>
+        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 2 }}>{label}</div>
         <div style={{ fontSize: isMobile ? 18 : 24, fontWeight: 800, color }}>{value}</div>
       </div>
     </div>
@@ -77,7 +74,8 @@ function StatCard({ label, value, icon, color, dark, isMobile }) {
 // ─── Main Component ────────────────────────────────────────────────────────
 export default function AdminDashboard() {
   const { user }  = useAuth()
-  const { dark }  = useTheme()
+  const { theme } = useTheme()
+  const isDark    = theme === 'dark'
   const { isMobile, isTablet, isSmall } = useBreakpoint()
   const navigate  = useNavigate()
   const location  = useLocation()
@@ -105,11 +103,11 @@ export default function AdminDashboard() {
   const [actionMsg, setActionMsg]         = useState('')
 
   // Theme values
-  const card   = dark ? '#1a1a2e' : '#fff'
-  const border = dark ? '#2a2a3d' : '#f0f0f8'
-  const text   = dark ? '#e8e8f0' : '#1a1a2e'
-  const sub    = dark ? '#888'    : '#888'
-  const inputBg = dark ? '#0f0f1a' : '#fff'
+  const card   = 'var(--bg-card)'
+  const border = 'var(--border-primary)'
+  const text   = 'var(--text-primary)'
+  const sub    = 'var(--text-muted)'
+  const inputBg = 'var(--input-bg)'
 
   // Fetch all data on mount
   useEffect(() => {
@@ -250,7 +248,7 @@ export default function AdminDashboard() {
             }}>
               👤 Edit Profile
             </button>
-            <div style={{ fontSize: 12, background: '#fef3c7', color: '#d97706', padding: '6px 14px', borderRadius: 8, fontWeight: 700, border: '1px solid #fde68a' }}>
+            <div style={{ fontSize: 12, background: isDark ? '#3a2e1a' : '#fef3c7', color: isDark ? '#fbbf24' : '#d97706', padding: '6px 14px', borderRadius: 8, fontWeight: 700, border: isDark ? '1px solid #5a4020' : '1px solid #fde68a' }}>
               ⚠️ Admin Access
             </div>
           </div>
@@ -264,14 +262,14 @@ export default function AdminDashboard() {
       )}
 
       {/* Tab bar - scrollable on mobile */}
-      <div className="hide-scrollbar" style={{ display: 'flex', gap: 4, background: dark ? '#1a1a2e' : '#f0f0f8', borderRadius: 12, padding: 4, marginBottom: 24, overflowX: 'auto', width: '100%' }}>
+      <div className="hide-scrollbar" style={{ display: 'flex', gap: 4, background: 'var(--bg-tertiary)', borderRadius: 12, padding: 4, marginBottom: 24, overflowX: 'auto', width: '100%' }}>
         {tabs.map(t => (
           <button key={t.key} onClick={() => navigate(t.key === 'overview' ? '/admin' : `/admin/${t.key}`)} style={{
             padding: isSmall ? '8px 14px' : '8px 18px', borderRadius: 9, border: 'none', fontSize: 12, fontWeight: 600,
             cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
-            background: tab === t.key ? (dark ? '#2a2a50' : '#fff') : 'transparent',
-            color: tab === t.key ? '#4f46e5' : sub,
-            boxShadow: tab === t.key ? '0 1px 4px rgba(0,0,0,.1)' : 'none',
+            background: tab === t.key ? 'var(--bg-secondary)' : 'transparent',
+            color: tab === t.key ? 'var(--text-brand)' : 'var(--text-muted)',
+            boxShadow: tab === t.key ? 'var(--shadow-card)' : 'none',
             flexShrink: 0,
           }}>
             {t.label}
@@ -285,12 +283,12 @@ export default function AdminDashboard() {
       {tab === 'overview' && !loading && (
         <div>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
-            <StatCard label="Total Users"       value={stats.totalUsers}                   icon={<i className="fi fi-rr-users"></i>} color="#4f46e5" dark={dark} isMobile={isMobile} />
-            <StatCard label="Total Problems"    value={stats.totalProblems}                icon={<i className="fi fi-rr-list-check"></i>} color="#2563eb" dark={dark} isMobile={isMobile} />
-            <StatCard label="Completed Jobs"    value={stats.totalContracts}               icon={<i className="fi fi-rr-check"></i>} color="#16a34a" dark={dark} isMobile={isMobile} />
-            <StatCard label="Total Revenue"     value={formatBDT(stats.totalRevenue || 0)} icon={<i className="fi fi-rr-coins"></i>} color="#d97706" dark={dark} isMobile={isMobile} />
-            <StatCard label="Open Disputes"     value={openDisputes}                       icon={<i className="fi fi-rr-scale-balanced"></i>} color="#dc2626" dark={dark} isMobile={isMobile} />
-            <StatCard label="Resolved Disputes" value={resolvedDisputes}                   icon={<i className="fi fi-rr-trophy"></i>} color="#0891b2" dark={dark} isMobile={isMobile} />
+            <StatCard label="Total Users"       value={stats.totalUsers}                   icon={<i className="fi fi-rr-users"></i>} color="#4f46e5" isMobile={isMobile} />
+            <StatCard label="Total Problems"    value={stats.totalProblems}                icon={<i className="fi fi-rr-list-check"></i>} color="#2563eb" isMobile={isMobile} />
+            <StatCard label="Completed Jobs"    value={stats.totalContracts}               icon={<i className="fi fi-rr-check"></i>} color="#16a34a" isMobile={isMobile} />
+            <StatCard label="Total Revenue"     value={formatBDT(stats.totalRevenue || 0)} icon={<i className="fi fi-rr-coins"></i>} color="#d97706" isMobile={isMobile} />
+            <StatCard label="Open Disputes"     value={openDisputes}                       icon={<i className="fi fi-rr-scale-balanced"></i>} color="#dc2626" isMobile={isMobile} />
+            <StatCard label="Resolved Disputes" value={resolvedDisputes}                   icon={<i className="fi fi-rr-trophy"></i>} color="#0891b2" isMobile={isMobile} />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: isSmall ? '1fr' : '1fr 1fr', gap: 16, marginBottom: 16 }}>
@@ -309,7 +307,7 @@ export default function AdminDashboard() {
                       <span style={{ fontSize: 12, fontWeight: 600, color: text }}>{r.icon} {r.label}</span>
                       <span style={{ fontSize: 12, fontWeight: 700, color: r.color }}>{count} ({pct}%)</span>
                     </div>
-                    <div style={{ height: 6, background: dark ? '#2a2a3d' : '#f0f0f8', borderRadius: 100 }}>
+                    <div style={{ height: 6, background: 'var(--bg-tertiary)', borderRadius: 100 }}>
                       <div style={{ height: '100%', width: `${pct}%`, background: r.color, borderRadius: 100 }} />
                     </div>
                   </div>
@@ -333,7 +331,7 @@ export default function AdminDashboard() {
                       <span style={{ fontSize: 12, fontWeight: 600, color: text }}>{s.label}</span>
                       <span style={{ fontSize: 12, fontWeight: 700, color: s.color }}>{count} ({pct}%)</span>
                     </div>
-                    <div style={{ height: 6, background: dark ? '#2a2a3d' : '#f0f0f8', borderRadius: 100 }}>
+                    <div style={{ height: 6, background: 'var(--bg-tertiary)', borderRadius: 100 }}>
                       <div style={{ height: '100%', width: `${pct}%`, background: s.color, borderRadius: 100 }} />
                     </div>
                   </div>
@@ -347,7 +345,7 @@ export default function AdminDashboard() {
             {users.slice(0, 5).map(u => (
               <div key={u._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: `1px solid ${border}` }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#4f46e5' }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--bg-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'var(--text-brand)' }}>
                     {u.name.slice(0, 2).toUpperCase()}
                   </div>
                   <div>
@@ -356,7 +354,7 @@ export default function AdminDashboard() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: u.role === 'solver' ? '#fff7ed' : '#eff6ff', color: u.role === 'solver' ? '#ea580c' : '#2563eb', textTransform: 'capitalize' }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: u.role === 'solver' ? 'var(--status-review-bg)' : 'var(--status-active-bg)', color: u.role === 'solver' ? 'var(--status-review-color)' : 'var(--status-active-color)', textTransform: 'capitalize' }}>
                     {u.role}
                   </span>
                 </div>
@@ -381,9 +379,9 @@ export default function AdminDashboard() {
             <div className="hide-scrollbar" style={{ display: 'flex', gap: 6, overflowX: 'auto', width: isMobile ? '100%' : 'auto' }}>
               {['all', 'client', 'solver'].map(r => (
                 <button key={r} onClick={() => setRoleFilter(r)} style={{
-                  padding: '9px 16px', borderRadius: 10, border: `1.5px solid ${roleFilter === r ? '#4f46e5' : border}`,
-                  background: roleFilter === r ? '#eef2ff' : card,
-                  color: roleFilter === r ? '#4f46e5' : sub,
+                  padding: '9px 16px', borderRadius: 10, border: `1.5px solid ${roleFilter === r ? 'var(--text-brand)' : border}`,
+                  background: roleFilter === r ? 'var(--bg-accent)' : card,
+                  color: roleFilter === r ? 'var(--text-brand)' : sub,
                   fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize', whiteSpace: 'nowrap'
                 }}>
                   {r}
@@ -394,7 +392,7 @@ export default function AdminDashboard() {
 
           <div style={{ background: card, border: `1.5px solid ${border}`, borderRadius: 16, overflowX: 'auto' }}>
             <div style={{ minWidth: 600 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr 1fr', background: dark ? '#1e1e30' : '#f8f9fc', padding: '10px 20px', borderBottom: `1px solid ${border}` }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr 1fr', background: 'var(--bg-tertiary)', padding: '10px 20px', borderBottom: `1px solid ${border}` }}>
                 {['User', 'Email', 'Role', 'Status', 'Action'].map(h => (
                   <div key={h} style={{ fontSize: 11, fontWeight: 700, color: sub, textTransform: 'uppercase' }}>{h}</div>
                 ))}
@@ -403,12 +401,12 @@ export default function AdminDashboard() {
               {filteredUsers.map(u => (
                 <div key={u._id} style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr 1fr', padding: '14px 20px', borderBottom: `1px solid ${border}`, alignItems: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 8, background: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#4f46e5' }}>{u.name.slice(0, 2).toUpperCase()}</div>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--bg-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: 'var(--text-brand)' }}>{u.name.slice(0, 2).toUpperCase()}</div>
                     <span style={{ fontSize: 13, fontWeight: 600, color: text }}>{u.name}</span>
                   </div>
                   <div style={{ fontSize: 12, color: sub }}>{u.email}</div>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: u.role === 'solver' ? '#fff7ed' : '#eff6ff', color: u.role === 'solver' ? '#ea580c' : '#2563eb', textTransform: 'capitalize', width: 'fit-content' }}>{u.role}</span>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: u.isBanned ? '#fef2f2' : '#f0fdf4', color: u.isBanned ? '#dc2626' : '#16a34a', width: 'fit-content' }}>{u.isBanned ? 'Banned' : 'Active'}</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: u.role === 'solver' ? 'var(--status-review-bg)' : 'var(--status-active-bg)', color: u.role === 'solver' ? 'var(--status-review-color)' : 'var(--status-active-color)', textTransform: 'capitalize', width: 'fit-content' }}>{u.role}</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: u.isBanned ? 'var(--error-bg)' : 'var(--status-done-bg)', color: u.isBanned ? 'var(--error-text)' : 'var(--status-done-color)', width: 'fit-content' }}>{u.isBanned ? 'Banned' : 'Active'}</span>
                   {u.role !== 'admin' ? (
                     <button onClick={() => handleBan(u._id)} style={{ background: u.isBanned ? '#f0fdf4' : '#fef2f2', color: u.isBanned ? '#16a34a' : '#dc2626', border: 'none', padding: '5px 12px', borderRadius: 7, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{u.isBanned ? 'Unban' : 'Ban'}</button>
                   ) : <span>—</span>}
@@ -423,7 +421,7 @@ export default function AdminDashboard() {
       {tab === 'problems' && !loading && (
         <div style={{ background: card, border: `1.5px solid ${border}`, borderRadius: 16, overflowX: 'auto' }}>
           <div style={{ minWidth: 600 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr 1fr 1fr 1fr', padding: '10px 20px', background: dark ? '#1e1e30' : '#f8f9fc', borderBottom: `1px solid ${border}` }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr 1fr 1fr 1fr', padding: '10px 20px', background: 'var(--bg-tertiary)', borderBottom: `1px solid ${border}` }}>
               {['Title', 'Category', 'Budget', 'Status', 'Action'].map(h => (
                 <div key={h} style={{ fontSize: 11, fontWeight: 700, color: sub, textTransform: 'uppercase' }}>{h}</div>
               ))}
@@ -466,7 +464,7 @@ export default function AdminDashboard() {
                     <button onClick={() => { setResolveModal(d); setResolution('solver_wins') }} style={{ background: '#4f46e5', color: '#fff', border: 'none', padding: '8px 18px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Resolve</button>
                   )}
                 </div>
-                <div style={{ background: dark ? '#0f0f1a' : '#f8f9fc', borderRadius: 10, padding: '12px 14px', fontSize: 13, color: text, lineHeight: 1.6 }}>{d.reason}</div>
+                <div style={{ background: 'var(--bg-primary)', borderRadius: 10, padding: '12px 14px', fontSize: 13, color: text, lineHeight: 1.6 }}>{d.reason}</div>
               </div>
             )
           })}
@@ -490,7 +488,7 @@ export default function AdminDashboard() {
                   <button onClick={() => handleResolveTicket(t._id)} style={{ background: '#16a34a', color: '#fff', border: 'none', padding: '8px 18px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Resolve</button>
                 )}
               </div>
-              <div style={{ background: dark ? '#0f0f1a' : '#f8f9fc', borderRadius: 10, padding: '12px 14px', fontSize: 13, color: text, lineHeight: 1.6 }}>{t.message}</div>
+              <div style={{ background: 'var(--bg-primary)', borderRadius: 10, padding: '12px 14px', fontSize: 13, color: text, lineHeight: 1.6 }}>{t.message}</div>
             </div>
           ))}
         </div>
