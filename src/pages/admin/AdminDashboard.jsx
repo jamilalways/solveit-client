@@ -494,7 +494,58 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Modals omitted for brevity, but they are already responsive in the original code via the Modal component */}
+      {/* ─── Delete Problem Modal ────────────────────── */}
+      <Modal open={!!deleteModal} onClose={() => setDeleteModal(null)} title="🗑️ Delete Problem">
+        <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: 20 }}>
+          Are you sure you want to delete <strong>{deleteModal?.title}</strong>? This action <strong>cannot be undone</strong> and will remove the problem from the platform.
+        </p>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button onClick={() => setDeleteModal(null)}
+            style={{ flex: 1, background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-secondary)', padding: '10px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+            Cancel
+          </button>
+          <button onClick={() => handleDeleteProblem(deleteModal._id)}
+            style={{ flex: 1, background: '#dc2626', color: '#fff', border: 'none', padding: '10px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+            Yes, Delete
+          </button>
+        </div>
+      </Modal>
+
+      {/* ─── Resolve Dispute Modal ────────────────────── */}
+      <Modal open={!!resolveModal} onClose={() => setResolveModal(null)} title="⚖️ Resolve Dispute">
+        <form onSubmit={handleResolve} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: 8 }}>Resolution</label>
+            <select 
+              value={resolution} 
+              onChange={e => setResolution(e.target.value)}
+              style={{ width: '100%', border: '1.5px solid var(--border-secondary)', borderRadius: 10, padding: '10px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', outline: 'none' }}
+            >
+              <option value="solver_wins">Solver Wins (Pay Solver)</option>
+              <option value="client_wins">Client Wins (Refund Client)</option>
+              <option value="split_50_50">Split 50/50</option>
+            </select>
+          </div>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: 8 }}>Admin Note (visible to both parties)</label>
+            <textarea 
+              rows={4}
+              value={resolveNote}
+              onChange={e => setResolveNote(e.target.value)}
+              placeholder="Explain the reason for this decision..."
+              style={{ width: '100%', border: '1.5px solid var(--border-secondary)', borderRadius: 10, padding: '12px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', outline: 'none', resize: 'vertical', fontSize: 13 }}
+              required
+            />
+          </div>
+          <button 
+            type="submit" 
+            disabled={resolveLoading}
+            style={{ background: '#4f46e5', color: '#fff', border: 'none', padding: '12px', borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: resolveLoading ? 'not-allowed' : 'pointer', opacity: resolveLoading ? 0.7 : 1 }}
+          >
+            {resolveLoading ? 'Processing...' : 'Confirm Resolution'}
+          </button>
+        </form>
+      </Modal>
     </DashboardLayout>
   )
 }
